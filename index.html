@@ -8,30 +8,37 @@
 <style>
   :root{
     --bg: #ffffff;
-    --card: #fbfdff;
     --accent: #ff4d4d;
     --accent-strong: #e60000;
     --muted: #6b7280;
     --shadow: 0 12px 40px rgba(2,6,23,0.08);
-    --glass: rgba(255,255,255,0.6);
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:'El Messiri',sans-serif;background:var(--bg);color:#071133}
   .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;}
   .panel{width:100%;max-width:1100px;border-radius:16px;background:linear-gradient(180deg,#fff,#fcfdff);box-shadow:var(--shadow);display:flex;gap:20px;padding:20px;}
-  /* LEFT - HEART CARD */
   .card{flex:0 0 680px;padding:18px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#fbfdff);border:1px solid #eef4fb}
   .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
   .title{font-size:18px;font-weight:700}
   .sub{color:var(--muted);font-size:13px}
   .heart-container{background:linear-gradient(180deg,#fff,#f7fbff);padding:16px;border-radius:12px;border:1px solid #eef6fc;display:flex;align-items:center;justify-content:center;min-height:420px}
   svg{max-width:100%;height:auto;display:block}
-  /* SEGMENTS styling */
+
+  /* segments styling */
   .segment{fill:transparent;stroke:#000;stroke-width:1.6;cursor:pointer;transition:transform .18s ease, filter .18s ease}
   .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
-  .segment.revealed{fill:var(--accent); transition:fill .4s ease}
+  /* when revealed, keep stroke black but fill red */
+  .segment.revealed{fill:var(--accent); transition:fill .4s ease; stroke:#000; }
+
+  /* animation class for the stroke-draw effect */
   .segment.anim-stroke{stroke:var(--accent);stroke-width:2.6;fill:transparent}
-  /* RIGHT - SIDEBAR */
+
+  /* outlines & labels (injected on top of shapes) */
+  .outline{fill:none;stroke:#000;stroke-width:1.8;pointer-events:none}
+  svg text.segment-label{font-size:10px;font-weight:600;fill:#071133;pointer-events:none;text-anchor:middle;dominant-baseline:central;font-family:'El Messiri',sans-serif}
+  svg text.segment-label.revealed{fill:#ffffff}
+
+  /* sidebar */
   .sidebar{flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px}
   .panel-block{background:#fff;padding:12px;border-radius:10px;border:1px solid #f0f6fb;box-shadow:0 6px 18px rgba(12,15,35,0.03)}
   .progress-bar{height:12px;background:#eef6fb;border-radius:8px;overflow:hidden}
@@ -41,13 +48,13 @@
   .controls{display:flex;gap:8px;align-items:center;justify-content:flex-end}
   button.btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;box-shadow:0 8px 20px rgba(255,77,77,0.14)}
   button.ghost{background:transparent;border:1px solid #e6eef7;color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer}
-  /* modal */
+
   .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:60}
   .modal{background:white;padding:18px;border-radius:12px;min-width:320px;box-shadow:0 18px 60px rgba(2,6,23,0.25)}
   .modal h3{margin:0 0 8px}
   .modal p{margin:0 0 14px;color:var(--muted)}
   .modal .row{display:flex;gap:10px;justify-content:flex-end}
-  /* small */
+
   footer.note{font-size:13px;color:var(--muted);margin-top:8px}
   @media (max-width:980px){.panel{flex-direction:column}.card{width:100%}}
 </style>
@@ -68,11 +75,10 @@
       </div>
 
       <div class="heart-container" id="heart-wrap">
-        <!-- SVG سيُحمَّل ويُحقَن هنا (لا تعرض ككود) -->
         <div id="svg-loader" class="muted">جارٍ تحميل القلب…</div>
       </div>
 
-      <footer class="note">أيقونات وحركات بسيطة، لو عايز نزوّد مؤثرات صوتية أو ضوء عند التلوين أضفها لي و أعملها لك.</footer>
+      <footer class="note">لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.</footer>
     </div>
 
     <aside class="sidebar">
@@ -95,9 +101,9 @@
       <div class="panel-block">
         <div class="muted">ملاحظات</div>
         <ul style="margin:10px 0 0 18px;color:var(--muted);font-size:14px">
-          <li>القلب بلون حواف أسود حسب طلبك.</li>
-          <li>التلوين يظهر بعرض أنيمشن قلم ثم تعبئة.</li>
-          <li>التقدم يُخزّن محليًا على متصفحك (localStorage).</li>
+          <li>القلب بالحدود السوداء كما طلبت.</li>
+          <li>الأسماء داخل كل تقسيمة مرئية الآن.</li>
+          <li>الخطوط الفاصلة تبقى مرئية حتى بعد التلوين.</li>
         </ul>
       </div>
     </aside>
@@ -117,18 +123,9 @@
 </div>
 
 <script>
-/*
-  هذا السكربت:
-  - يحمل SVG من ملف heart_segments_named.svg
-  - يحقنه داخل الصفحة ويجعل العناصر ذات الصنف .segment قابلة للنقر
-  - يعرض مودال تأكيد ثم يقوم بأنيميشن قلم ثم يلون الجزء
-  - يخزن التقدم في localStorage تحت المفتاح quran_heart_progress
-  - يتعامل مع أي عدد من الأجزاء فعليًا (يعرض العدد الحقيقي)
-*/
+const SVG_FILE = 'heart_segments_named.svg'; // تأكد اسم ملف الـSVG هنا
 
-const SVG_FILE = 'heart_segments_named.svg'; // غيّر الاسم لو عندك اسم آخر
-
-// عناصر DOM
+// DOM refs
 const heartWrap = document.getElementById('heart-wrap');
 const loader = document.getElementById('svg-loader');
 const modalEl = document.getElementById('modal');
@@ -143,25 +140,27 @@ const encourage = document.getElementById('encourage');
 const btnReset = document.getElementById('btn-reset');
 const btnList = document.getElementById('btn-list');
 
-let segments = []; // عناصر الـSVG بعد الحقن
+let segments = [];
 let saved = JSON.parse(localStorage.getItem('quran_heart_progress') || '{}') || {};
 if (!saved || typeof saved !== 'object') saved = {};
 
+// load SVG and inject inline
 async function loadAndInjectSVG(){
   try{
     const res = await fetch(SVG_FILE);
-    if(!res.ok) throw new Error('SVG not found');
+    if(!res.ok) throw new Error('SVG not found: ' + res.status);
     const text = await res.text();
-    // نحط الـSVG داخل الـcontainer
     heartWrap.innerHTML = text;
-    // بعد الحقن نجلب العناصر
     segments = Array.from(heartWrap.querySelectorAll('.segment'));
     loader && loader.remove();
     initializeSegments();
+    // create outlines and labels on top
+    const svgRoot = heartWrap.querySelector('svg');
+    if(svgRoot) setTimeout(()=>createOutlinesAndLabels(svgRoot), 120);
     updateUI();
   } catch(err){
-    loader.innerText = 'خطأ في تحميل الملف: ' + err.message;
     console.error(err);
+    if(loader) loader.innerText = 'خطأ في تحميل الملف: ' + err.message;
   }
 }
 
@@ -182,7 +181,6 @@ function initializeSegments(){
 
   segments.forEach(seg=>{
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
-    // ensure pointer, black stroke
     seg.style.stroke = seg.style.stroke || '#000';
     seg.style.cursor = 'pointer';
 
@@ -190,7 +188,6 @@ function initializeSegments(){
       seg.classList.add('revealed');
     }
 
-    // prepare stroke dash (for path-like elements). try-catch in case element doesn't support.
     try{
       const len = seg.getTotalLength();
       seg.style.strokeDasharray = len;
@@ -201,11 +198,9 @@ function initializeSegments(){
     seg.addEventListener('click', (e)=>{
       e.preventDefault();
       if(saved[name]) {
-        // ممكن نعرض رسالة صغيرة أو نفتح نافذة لتأكيد إزالة الحفظ — حاليًا نفعل لا شيء
         encourage.textContent = `لقد سبق حفظ "${name}".`;
         return;
       }
-      // افتح المودال مع اسم السورة
       modalTitle.textContent = 'تأكيد إتمام الحفظ';
       modalBody.textContent = `هل أنت متأكد من إتمام حفظ سورة "${name}"؟`;
       modalEl.style.display = 'flex';
@@ -214,30 +209,83 @@ function initializeSegments(){
   });
 }
 
+/* --- outlines and labels: generate top outlines and centered labels for segments --- */
+function createOutlinesAndLabels(svgRoot){
+  try{
+    const existingOut = svgRoot.querySelector('#__outlines_group');
+    if(existingOut) existingOut.remove();
+    const outlinesG = document.createElementNS('http://www.w3.org/2000/svg','g');
+    outlinesG.setAttribute('id','__outlines_group');
+    const labelsG = document.createElementNS('http://www.w3.org/2000/svg','g');
+    labelsG.setAttribute('id','__labels_group');
+
+    segments.forEach(seg=>{
+      try{
+        // outline clone (drawn on top)
+        const clone = seg.cloneNode(false);
+        clone.classList.remove('segment');
+        clone.classList.add('outline');
+        clone.setAttribute('fill','none');
+        clone.setAttribute('stroke','#000');
+        clone.setAttribute('stroke-width','1.8');
+        clone.style.pointerEvents = 'none';
+        outlinesG.appendChild(clone);
+
+        // label
+        const name = seg.getAttribute('data-name') || seg.getAttribute('id') || '';
+        let cx = 0, cy = 0;
+        let bb = null;
+        try{ bb = seg.getBBox(); cx = bb.x + bb.width/2; cy = bb.y + bb.height/2; } catch(e){
+          const sbb = svgRoot.getBBox(); cx = sbb.width/2; cy = sbb.height/2;
+        }
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('class','segment-label');
+        txt.setAttribute('x',cx);
+        txt.setAttribute('y',cy);
+        txt.textContent = name;
+        try{ const size = Math.max(8, Math.min(14, Math.round(Math.min(bb.width, bb.height) * 0.18))); txt.style.fontSize = size + 'px'; }catch(e){}
+        labelsG.appendChild(txt);
+      }catch(err){
+        console.warn('outline/label err',err);
+      }
+    });
+
+    // append outlines and labels at the end so they are drawn on top
+    svgRoot.appendChild(outlinesG);
+    svgRoot.appendChild(labelsG);
+
+    // apply revealed class to corresponding labels
+    segments.forEach((s,i)=>{
+      const name = s.getAttribute('data-name') || s.getAttribute('id') || '';
+      const label = labelsG.children[i];
+      if(!label) return;
+      if(saved[name]) label.classList.add('revealed');
+    });
+
+  }catch(e){ console.warn('createOutlinesAndLabels failed',e); }
+}
+/* --- end outlines/labels --- */
+
 // modal handlers
 modalCancel.addEventListener('click', ()=>{ modalEl.style.display='none'; modalEl.dataset.target=''; });
+
 modalConfirm.addEventListener('click', ()=>{
   const name = modalEl.dataset.target;
   if(!name) return modalEl.style.display='none';
-  // ايجاد العنصر
   const seg = segments.find(s => (s.getAttribute('data-name') || s.getAttribute('id')) === name);
   if(!seg){ modalEl.style.display='none'; return; }
 
-  // animation: stroke dash then fill
   try{
     const len = Number(seg.dataset._len) || seg.getTotalLength();
     seg.classList.add('anim-stroke');
-    // force reflow
     void seg.getBoundingClientRect();
     seg.style.transition = 'stroke-dashoffset 0.45s linear';
     seg.style.strokeDashoffset = '0';
-    // بعد انتهاء أنميشن الخط، نملأ
     const onEnd = (ev) => {
       if(ev.propertyName !== 'stroke-dashoffset') return;
       seg.removeEventListener('transitionend', onEnd);
       seg.classList.remove('anim-stroke');
       seg.classList.add('revealed');
-      // reset dashoffset
       seg.style.strokeDashoffset = len;
       seg.style.transition = 'fill 0.3s ease';
       // save
@@ -245,29 +293,56 @@ modalConfirm.addEventListener('click', ()=>{
       saved._last = name;
       localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
       updateUI();
+      // also update corresponding label color
+      const svgRoot = heartWrap.querySelector('svg');
+      if(svgRoot){
+        const labelsG = svgRoot.querySelector('#__labels_group');
+        if(labelsG){
+          for(let i=0;i<labelsG.children.length;i++){
+            const lab = labelsG.children[i];
+            if(lab && (lab.textContent || '').trim() === name) lab.classList.add('revealed');
+          }
+        }
+      }
       encourage.textContent = `ما شاء الله! تم حفظ "${name}". استمر 🌟`;
       modalEl.style.display = 'none';
     };
     seg.addEventListener('transitionend', onEnd);
   } catch(e){
-    // fallback
     seg.classList.add('revealed');
     saved[name] = true;
     saved._last = name;
     localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
     updateUI();
     encourage.textContent = `ما شاء الله! تم حفظ "${name}". استمر 🌟`;
+    // update label color
+    const svgRoot = heartWrap.querySelector('svg');
+    if(svgRoot){
+      const labelsG = svgRoot.querySelector('#__labels_group');
+      if(labelsG){
+        for(let i=0;i<labelsG.children.length;i++){
+          const lab = labelsG.children[i];
+          if(lab && (lab.textContent || '').trim() === name) lab.classList.add('revealed');
+        }
+      }
+    }
     modalEl.style.display = 'none';
   }
 });
 
-// reset button
+// reset
 btnReset.addEventListener('click', ()=>{
   const ok = confirm('هل تريد إعادة التقدم من البداية؟ سيتم حذف التقدم المخزن على جهازك.');
   if(!ok) return;
   localStorage.removeItem('quran_heart_progress');
   saved = {};
   segments.forEach(s => s.classList.remove('revealed'));
+  // remove label reveals
+  const svgRoot = heartWrap.querySelector('svg');
+  if(svgRoot){
+    const labelsG = svgRoot.querySelector('#__labels_group');
+    if(labelsG) for(let i=0;i<labelsG.children.length;i++) labelsG.children[i].classList.remove('revealed');
+  }
   updateUI();
   encourage.textContent = 'تمت إعادة كل شيء — بالتوفيق في البدء من جديد 🌱';
 });
@@ -279,7 +354,7 @@ btnList.addEventListener('click', ()=>{
   alert(`السور المحفوظة (${done.length}):\n` + done.join(', '));
 });
 
-// load svg on start
+// start
 loadAndInjectSVG();
 </script>
 </body>

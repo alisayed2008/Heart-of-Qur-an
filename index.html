@@ -24,11 +24,22 @@
   .heart-container{background:linear-gradient(180deg,#fff,#f7fbff);padding:16px;border-radius:12px;border:1px solid #eef6fc;display:flex;align-items:center;justify-content:center;min-height:420px}
   svg{max-width:100%;height:auto;display:block}
 
-  /* segments styling */
-  .segment{fill:transparent;stroke:#000;stroke-width:1.6;cursor:pointer;transition:transform .18s ease, filter .18s ease}
+  /* segments styling: stroke-only initially; keep stroke visible after fill */
+  .segment{
+    fill: none !important;
+    stroke: #000 !important;
+    stroke-width: 1.6;
+    cursor: pointer;
+    transition: transform .18s ease, filter .18s ease, fill .3s ease;
+  }
   .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
-  /* when revealed, keep stroke black but fill red */
-  .segment.revealed{fill:var(--accent); transition:fill .4s ease; stroke:#000; }
+  /* when revealed, fill red but keep stroke black */
+  .segment.revealed{
+    fill: var(--accent) !important;
+    stroke: #000 !important;
+    stroke-width: 1.8;
+    transition: fill .4s ease;
+  }
 
   /* animation class for the stroke-draw effect */
   .segment.anim-stroke{stroke:var(--accent);stroke-width:2.6;fill:transparent}
@@ -183,6 +194,10 @@ function initializeSegments(){
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
     seg.style.stroke = seg.style.stroke || '#000';
     seg.style.cursor = 'pointer';
+
+    // *** هذه السطور أضيفت — تلغي أي تعبئة داخلية لتضمن العرض كمخطط أسود ***
+    seg.setAttribute('fill', 'none');
+    seg.style.fill = 'none';
 
     if(saved[name]){
       seg.classList.add('revealed');

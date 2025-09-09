@@ -557,7 +557,7 @@ async function svgToPngBlob(svgEl, scale=2){
     const name = s.getAttribute('data-name') || s.getAttribute('id');
     const isRevealed = Boolean(saved[name]);
     s.setAttribute('stroke','#000');
-    s.setAttribute('fill', isRevealed ? getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d' : 'transparent');
+s.setAttribute('fill', isRevealed ? '#ff4d4d' : '#ffffff00');
   });
   // also ensure outline group is present; labels will be kept
   // serialize

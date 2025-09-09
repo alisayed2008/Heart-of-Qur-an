@@ -31,18 +31,12 @@
     stroke-width: 1.6 !important;
     cursor: pointer;
     transition: transform .18s ease, filter .18s ease, fill .25s ease;
+    vector-effect: non-scaling-stroke;
   }
   .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
   .segment.revealed{
     fill: var(--accent) !important;    /* red fill only when revealed */
     stroke: #000 !important;           /* outline remains black */
-  }
-
-  /* temporary highlight used by search (doesn't reveal/save) */
-  .segment.search-highlight{
-    filter: drop-shadow(0 0 12px rgba(255,180,90,0.85));
-    stroke-width: 2.6 !important;
-    transition: transform .12s ease, stroke-width .12s ease;
   }
 
   .overlay-draw{pointer-events:none; fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;}
@@ -70,9 +64,8 @@
   .modal .row{display:flex;gap:10px;justify-content:flex-end}
 
   footer.note{font-size:13px;color:var(--muted);margin-top:8px}
-  /* Donation button subtle */
-  .donate-row{display:flex;justify-content:flex-start;padding-top:8px}
-  .donate-btn{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 12px;border-radius:8px;font-size:14px;cursor:pointer;opacity:0.9}
+  /* Donation button style (subtle) */
+  .donate-btn{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;opacity:0.9}
   .donate-btn:hover{opacity:1;text-decoration:underline}
 
   /* Celebration overlay */
@@ -89,11 +82,6 @@
   /* Share modal */
   #share-modal{display:none;position:fixed;inset:0;align-items:center;justify-content:center;z-index:130;background:rgba(0,0,0,0.45)}
   #share-box{background:white;padding:16px;border-radius:12px;min-width:320px;max-width:420px}
-
-  /* search input small */
-  .search-box{display:flex;gap:8px;align-items:center}
-  .search-box input{padding:8px;border-radius:8px;border:1px solid #e6eef7;background:#fff}
-  .search-box button{padding:8px 10px;border-radius:8px;border:1px solid #e6eef7;background:#fff;cursor:pointer}
 
   /* responsive */
   @media (max-width:980px){.panel{flex-direction:column}.card{width:100%}.controls{justify-content:flex-start}}
@@ -112,10 +100,6 @@
           <div class="left">
             <button class="ghost" id="btn-list" title="عرض السور المحفوظة">قائمة</button>
             <button class="ghost" id="btn-share" title="مشاركة التقدم" style="display:none">شارك التقدم</button>
-            <div class="search-box" style="margin-left:8px;">
-              <input id="search-input" placeholder="اكتب اسم السورة" aria-label="بحث عن سورة" />
-              <button id="search-btn" title="بحث">بحث</button>
-            </div>
           </div>
           <button class="btn" id="btn-reset" title="إعادة التقدم">إعادة</button>
         </div>
@@ -125,20 +109,14 @@
         <div id="svg-loader" class="muted">جارٍ تحميل القلب…</div>
       </div>
 
-      <footer class="note">
-        لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.
-        <div class="donate-row">
-          <!-- ضع رابط التبرع في المتغير DONATION_URL داخل السكربت -->
-          <a id="donate-link" class="donate-btn" href="#" target="_blank" rel="noopener">تبرع لمطور الموقع</a>
-        </div>
-      </footer>
+      <footer class="note">لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.</footer>
     </div>
 
     <aside class="sidebar">
       <div class="panel-block">
         <div class="muted">التقدم</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-          <div class="big-num" id="count-text">0 / 112</div>
+          <div class="big-num" id="count-text">0 / 0</div>
           <div class="muted" id="last-text">لا شيء محفوظ</div>
         </div>
         <div style="margin-top:12px" class="progress-bar">
@@ -158,6 +136,10 @@
           <li>الأسماء داخل كل تقسيمة مرئية الآن.</li>
           <li>الخطوط الفاصلة تبقى مرئية حتى بعد التلوين.</li>
         </ul>
+        <!-- subtle donation button -->
+        <div style="margin-top:10px; text-align:left">
+          <button id="donate-btn" class="donate-btn">تبرع لمطور الموقع</button>
+        </div>
       </div>
     </aside>
   </div>
@@ -198,7 +180,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px">
       <button class="ghost" id="share-wasap">مشاركة واتسآب</button>
       <button class="ghost" id="share-fb">مشاركة فيس بوك</button>
-      <button class="btn" id="share-direct">مشاركة/فتح الصورة</button>
+      <button class="btn" id="share-direct">مشاركة مباشرة / حفظ</button>
       <button class="ghost" id="share-copy">نسخ للصورة</button>
     </div>
     <div style="margin-top:12px;text-align:left;font-size:13px;color:var(--muted)">
@@ -209,14 +191,15 @@
 </div>
 
 <script>
-/* ===========================
-   إعداد سريع: المسارات والتعداد
-   =========================== */
-const SVG_FILE = 'heart_segments_named.svg'; // اسم ملف الـSVG
-const TOTAL_SURAH = 112;                   // عرض العد دائماً على 112 كما طلبت
-let DONATION_URL = '#';                    // ضع رابط التبرع هنا (أو سأعدله لك لاحقاً)
+/* ============== إعدادات سريعة ==============
+   ضع رابط التبرع هنا (سيُفتح في تاب جديد)
+   لو عايز تحط لينك التبرع: غَيّر القيمة أدناه
+*/
+const DONATION_LINK = '#'; // <-- حط هنا لينك التبرع بتاعك
 
-/* DOM Refs */
+const SVG_FILE = 'heart_segments_named.svg'; // تأكد اسم ملف الـSVG هنا
+
+// DOM refs
 const heartWrap = document.getElementById('heart-wrap');
 const loader = document.getElementById('svg-loader');
 const modalEl = document.getElementById('modal');
@@ -231,7 +214,7 @@ const encourage = document.getElementById('encourage');
 const btnReset = document.getElementById('btn-reset');
 const btnList = document.getElementById('btn-list');
 const btnShare = document.getElementById('btn-share');
-const donateLink = document.getElementById('donate-link');
+const donateBtn = document.getElementById('donate-btn');
 
 const celebrate = document.getElementById('celebrate');
 const confettiArea = document.getElementById('confetti-area');
@@ -247,34 +230,70 @@ const shareDirect = document.getElementById('share-direct');
 const shareCopy = document.getElementById('share-copy');
 const shareStatus = document.getElementById('share-status');
 
-const searchInput = document.getElementById('search-input');
-const searchBtn = document.getElementById('search-btn');
-
-/* بيانات */
 let segments = [];
 let saved = JSON.parse(localStorage.getItem('quran_heart_progress') || '{}') || {};
 if (!saved || typeof saved !== 'object') saved = {};
 
-// ensure we mark Fatiha as "counted" for display (but not revealed)
-if (!(' _fatiha_counted' in saved) && !saved._fatihaCounted) {
-  // We use a single flag name saved._fatihaCounted for clarity
-  saved._fatihaCounted = true;
-  // Don't store it persistently if you don't want; but store now so counts persist across reloads
-  localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
+/* ======= Helpers: force visibility of strokes & empty fills ======= */
+function enforceStrokeVisibility(svgRoot){
+  if(!svgRoot) return;
+  // apply to typical shape tags
+  const tags = ['path','polygon','polyline','rect','circle','ellipse'];
+  tags.forEach(tag => {
+    Array.from(svgRoot.querySelectorAll(tag)).forEach(el=>{
+      // only touch shapes inside the heart container; avoid logos/text outside
+      // force attributes
+      try{
+        el.setAttribute('stroke', el.getAttribute('stroke') || '#000');
+        el.setAttribute('stroke-width', el.getAttribute('stroke-width') || '1.6');
+        // keep fill transparent unless it's been marked revealed in saved (we'll manage reveals elsewhere)
+        const name = el.getAttribute('data-name') || el.getAttribute('id') || '';
+        if(name && saved[name]) {
+          // If saved and not 'الفاتحة' -> keep revealed class (visual)
+          if(name !== 'الفاتحة') {
+            el.classList.add('revealed');
+          } else {
+            // ensure not filled
+            el.setAttribute('fill','transparent');
+            el.classList.remove('revealed');
+          }
+        } else {
+          el.setAttribute('fill','transparent');
+          el.classList.remove('revealed');
+        }
+        // ensure stroke visible
+        el.style.stroke = '#000';
+        el.style.fill = 'transparent';
+      }catch(e){}
+    });
+  });
+  // also for any existing outlines (if created earlier)
+  Array.from(svgRoot.querySelectorAll('.outline')).forEach(o=>{
+    o.setAttribute('stroke','#000');
+    o.setAttribute('fill','none');
+    o.setAttribute('stroke-width','1.6');
+  });
 }
-encourage.textContent = 'الفاتحة محسوبة — ابدأ بحفظ باقي السور إن شاء الله.';
 
-/* ===== تحميل وإدخال SVG ===== */
+/* ======= load & inject svg (keeps your structure) ======= */
 async function loadAndInjectSVG(){
   try{
     const res = await fetch(SVG_FILE);
     if(!res.ok) throw new Error('SVG not found: ' + res.status);
     const text = await res.text();
     heartWrap.innerHTML = text;
+    const svgRoot = heartWrap.querySelector('svg');
+    // ensure svg has xmlns so serialization works later
+    if(svgRoot && !svgRoot.getAttribute('xmlns')) svgRoot.setAttribute('xmlns','http://www.w3.org/2000/svg');
+
     segments = Array.from(heartWrap.querySelectorAll('.segment'));
     loader && loader.remove();
+
+    // enforce stroke visibility right away
+    if(svgRoot) enforceStrokeVisibility(svgRoot);
+
     initializeSegments();
-    const svgRoot = heartWrap.querySelector('svg');
+    // create outlines and labels on top
     if(svgRoot) setTimeout(()=>createOutlinesAndLabels(svgRoot), 120);
     updateUI();
   } catch(err){
@@ -283,27 +302,24 @@ async function loadAndInjectSVG(){
   }
 }
 
-/* ===== تحديث الواجهة (عداد، زَر المشاركة، تحقق الاكتمال) ===== */
+/* ======= UI update ======= */
 function updateUI(){
-  // count revealed segments (actual saved entries, ignoring metadata)
-  const revealedCount = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated' && k!=='_fatihaCounted').length;
-  // include الفاتحة كحالة محسوبة إذا العلامة موجودة
-  const totalShown = TOTAL_SURAH;
-  const counted = revealedCount + (saved._fatihaCounted ? 1 : 0);
-  countText.textContent = `${counted} / ${totalShown}`;
+  const total = segments.length;
+  const done = Object.keys(saved).filter(k => k !== '_last' && k !== '_celebrated').length;
+  countText.textContent = `${done} / ${total}`;
   lastText.textContent = saved._last ? `آخر: ${saved._last}` : 'لا شيء محفوظ';
-  progressFill.style.width = totalShown ? `${Math.round((counted/totalShown)*100)}%` : '0%';
-  // show share button only if at least one revealed (not just فاتحة)
-  btnShare.style.display = revealedCount > 0 ? 'inline-block' : 'none';
-  // celebration on full completion (counted equals total)
-  if(totalShown && counted === totalShown && !saved._celebrated){
+  progressFill.style.width = total ? `${Math.round((done/total)*100)}%` : '0%';
+  // show share button if at least one saved
+  btnShare.style.display = done > 0 ? 'inline-block' : 'none';
+  // check completion
+  if(total && done === total && !saved._celebrated){
     saved._celebrated = true;
     localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
     showCelebration();
   }
 }
 
-/* ===== إعداد المقاطع (لا تغيير في المنطق الأصلي) ===== */
+/* ======= initialize segments (minimal changes) ======= */
 function initializeSegments(){
   if(!segments.length){
     heartWrap.querySelector('#svg-loader')?.remove();
@@ -314,14 +330,16 @@ function initializeSegments(){
   segments.forEach(seg=>{
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
 
-    // Force outlines and empty fill from the start (do not change structure)
+    // Force outlines and empty fill from the start (we don't change structure)
     seg.setAttribute('fill','transparent');
     seg.setAttribute('stroke', seg.getAttribute('stroke') || '#000');
+    seg.setAttribute('stroke-width', seg.getAttribute('stroke-width') || '1.6');
     seg.style.cursor = 'pointer';
 
-    // only apply revealed if actually saved (we do NOT auto-reveal الفاتحة)
     if(saved[name]){
-      seg.classList.add('revealed');
+      // but if name is الفاتحة, keep it not filled
+      if(name !== 'الفاتحة') seg.classList.add('revealed');
+      else seg.classList.remove('revealed');
     }
 
     try{
@@ -345,7 +363,7 @@ function initializeSegments(){
   });
 }
 
-/* ===== outlines & labels (كما كان) ===== */
+/* outlines and labels: same as before (keeps outlines visible on top) */
 function createOutlinesAndLabels(svgRoot){
   try{
     const existingOut = svgRoot.querySelector('#__outlines_group');
@@ -397,7 +415,7 @@ function createOutlinesAndLabels(svgRoot){
   }catch(e){ console.warn('createOutlinesAndLabels failed',e); }
 }
 
-/* ===== animation overlay and reveal (كما كان) ===== */
+/* animate overlay draw then reveal (keeps outlines top) */
 function animateDrawThenReveal(seg, name, onDone){
   const svgRoot = heartWrap.querySelector('svg');
   if(!svgRoot){
@@ -407,7 +425,7 @@ function animateDrawThenReveal(seg, name, onDone){
     const overlay = seg.cloneNode(false);
     overlay.classList.add('overlay-draw');
     overlay.setAttribute('fill','none');
-    overlay.setAttribute('stroke', 'var(--accent)');
+    overlay.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d');
     overlay.setAttribute('stroke-width','2.6');
     let len = 0;
     try{ len = overlay.getTotalLength(); }catch(e){ len = seg.dataset._len || 0; }
@@ -439,8 +457,8 @@ function animateDrawThenReveal(seg, name, onDone){
   }
 }
 
-/* ===== Celebration visuals (كما كان) ===== */
-function createConfetti(areaEl, count=180){
+/* ===== Celebration visuals (as before) ===== */
+function createConfetti(areaEl, count=200){
   areaEl.innerHTML = '';
   const style = document.createElement('style');
   style.textContent = `@keyframes confetti-fall {0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:.9}}`;
@@ -503,9 +521,6 @@ function showCelebration(){
   celebrate.style.display = 'block';
   celebrate.setAttribute('aria-hidden','false');
   celebrate.style.pointerEvents = 'auto';
-  setTimeout(()=> {
-    celebrationClose.focus && celebrationClose.focus();
-  }, 300);
 }
 celebrationClose.addEventListener('click', ()=> {
   celebrate.style.display='none';
@@ -513,7 +528,7 @@ celebrationClose.addEventListener('click', ()=> {
   confettiArea.innerHTML=''; balloons.innerHTML=''; lights.innerHTML='';
 });
 
-/* ===== Modal confirm handlers (تمّت إزالة الاستثناء القديم للفاتحة هنا) ===== */
+/* ===== Modal handlers (existing flow) ===== */
 modalCancel.addEventListener('click', ()=>{ modalEl.style.display='none'; modalEl.dataset.target=''; });
 
 modalConfirm.addEventListener('click', ()=>{
@@ -521,6 +536,17 @@ modalConfirm.addEventListener('click', ()=>{
   if(!name) return modalEl.style.display='none';
   const seg = segments.find(s => (s.getAttribute('data-name') || s.getAttribute('id')) === name);
   if(!seg){ modalEl.style.display='none'; return; }
+
+  // Special-case: الفاتحة — تسجل محفوظة بدون تلوين (تجنُب لأن الفاتحة قد تمثل مساراً يغطي القلب كله)
+  if(name === 'الفاتحة'){
+    saved[name] = true;
+    saved._last = name;
+    localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
+    updateUI();
+    encourage.textContent = `سورة الفاتحة تم تسجيلها (غير ملونة لتجنب تغطية القلب).`;
+    modalEl.style.display = 'none';
+    return;
+  }
 
   try{
     animateDrawThenReveal(seg, name, () => {
@@ -552,15 +578,12 @@ modalConfirm.addEventListener('click', ()=>{
   }
 });
 
-/* ===== reset & list (كالمعتاد) ===== */
+/* reset */
 btnReset.addEventListener('click', ()=>{
   const ok = confirm('هل تريد إعادة التقدم من البداية؟ سيتم حذف التقدم المخزن على جهازك.');
   if(!ok) return;
   localStorage.removeItem('quran_heart_progress');
   saved = {};
-  // ensure we still preserve the "فاتحة محسوبة" behavior
-  saved._fatihaCounted = true;
-  localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
   segments.forEach(s => s.classList.remove('revealed'));
   const svgRoot = heartWrap.querySelector('svg');
   if(svgRoot){
@@ -568,70 +591,82 @@ btnReset.addEventListener('click', ()=>{
     if(labelsG) for(let i=0;i<labelsG.children.length;i++) labelsG.children[i].classList.remove('revealed');
   }
   updateUI();
-  encourage.textContent = 'تمت إعادة كل شيء — الفاتحة محسوبة كبداية، ابدأ من جديد بالتوفيق 🌱';
+  encourage.textContent = 'تمت إعادة كل شيء — بالتوفيق في البدء من جديد 🌱';
 });
 
+/* list */
 btnList.addEventListener('click', ()=>{
-  const done = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated' && k!=='_fatihaCounted');
+  const done = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated');
   if(done.length === 0) return alert('لم تحفظ أي سورة بعد.');
   alert(`السور المحفوظة (${done.length}):\n` + done.join(', '));
 });
 
-/* ===== Search: يضيء مكان السورة مؤقتًا (لا يحفظ) ===== */
-function doSearch(term){
-  if(!term || !segments.length) return;
-  const q = term.trim();
-  if(!q) return;
-  const matched = segments.filter(s => {
-    const name = (s.getAttribute('data-name') || s.getAttribute('id') || '').trim();
-    return name.includes(q);
-  });
-  if(!matched.length){
-    encourage.textContent = 'لم أجد السورة، حاول كتابة جزء من الاسم بالضبط.';
-    return;
-  }
-  matched.forEach(s=>{
-    // toggle highlight; if already has, remove and return
-    if(s.classList.contains('search-highlight')){
-      s.classList.remove('search-highlight');
-    } else {
-      s.classList.add('search-highlight');
-      // remove after 3s so it "يطفي ويشتغل"
-      setTimeout(()=> s.classList.remove('search-highlight'), 3000);
-    }
-  });
-  encourage.textContent = `تم تمييز ${matched.length} موضع/مواضع — اضغط على الجزء ثم أكد للحفظ.`;
-}
-searchBtn.addEventListener('click', ()=> doSearch(searchInput.value));
-searchInput.addEventListener('keypress', (e)=> { if(e.key === 'Enter') doSearch(searchInput.value); });
-
-/* ===== SHARE: تحويل SVG إلى PNG بخلفية بيضاء ===== */
+/* ============ SHARE: generate PNG from SVG, then share/download/copy ============ */
 async function svgToPngBlob(svgEl, scale=2){
+  // clone and prepare
   const clone = svgEl.cloneNode(true);
+
+  // ensure clone has xmlns
+  if(!clone.getAttribute('xmlns')) clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+
+  // determine size from bounding box on-screen for crisp rendering
+  const rect = svgEl.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width));
+  const h = Math.max(1, Math.round(rect.height));
+  clone.setAttribute('width', w);
+  clone.setAttribute('height', h);
+  clone.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  // remove any temporary overlay-draw elements
   clone.querySelectorAll('.overlay-draw').forEach(n=>n.remove());
-  // ensure fills/strokes set as attributes
-  const segs = clone.querySelectorAll('.segment');
-  segs.forEach(s=>{
-    const name = s.getAttribute('data-name') || s.getAttribute('id');
-    const isRevealed = Boolean(saved[name]);
-    s.setAttribute('stroke','#000');
-    s.setAttribute('fill', isRevealed ? '#ff4d4d' : 'transparent');
+
+  // ensure outlines are present and visible
+  clone.querySelectorAll('.outline').forEach(o=>{
+    o.setAttribute('stroke','#000');
+    o.setAttribute('fill','none');
+    o.setAttribute('stroke-width','1.6');
   });
+
+  // set segment fills/strokes based on saved, but DO NOT fill 'الفاتحة'
+  clone.querySelectorAll('.segment').forEach(s=>{
+    try{
+      const nm = s.getAttribute('data-name') || s.getAttribute('id') || '';
+      s.setAttribute('stroke','#000');
+      s.setAttribute('stroke-width','1.6');
+      if(nm === 'الفاتحة'){
+        s.setAttribute('fill','transparent');
+      } else {
+        const revealed = Boolean(saved[nm]);
+        s.setAttribute('fill', revealed ? ( getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d' ) : 'transparent');
+      }
+    }catch(e){}
+  });
+
+  // ensure labels visible and colored appropriately
+  clone.querySelectorAll('text.segment-label').forEach(t=>{
+    try{
+      const txt = (t.textContent||'').trim();
+      const revealed = Boolean(saved[txt]);
+      t.setAttribute('fill', revealed ? '#fff' : '#071133');
+    }catch(e){}
+  });
+
+  // serialize
   const svgString = new XMLSerializer().serializeToString(clone);
   const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
   const img = new Image();
   img.src = encoded;
   await new Promise((res, rej)=>{ img.onload = res; img.onerror = rej; });
-  const width = img.width * scale;
-  const height = img.height * scale;
+
+  // draw to canvas with white background (بيضة)
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = Math.round(w*scale);
+  canvas.height = Math.round(h*scale);
   const ctx = canvas.getContext('2d');
-  // white background (as requested)
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0,0,width,height);
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.fillStyle = '#ffffff'; // **بيضة الخلفية**
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
   return new Promise((resolve)=> canvas.toBlob(resolve, 'image/png'));
 }
 
@@ -643,6 +678,7 @@ async function shareProgressAsImage(){
     const blob = await svgToPngBlob(svgRoot, 2);
     if(!blob) throw new Error('لم يتم إنشاء الصورة');
     const file = new File([blob], 'quran-progress.png', { type: 'image/png' });
+    // try Web Share API with files
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       try {
         await navigator.share({ files: [file], title: 'تقدّم حفظي في القرآن', text: 'هذا تقدّمي في حفظ سور القرآن — ما شاء الله' });
@@ -657,10 +693,10 @@ async function shareProgressAsImage(){
     if(navigator.clipboard && navigator.clipboard.write){
       try{
         await navigator.clipboard.write([ new ClipboardItem({ "image/png": blob }) ]);
-        shareStatus.textContent = 'نسخت الصورة إلى الحافظة — الصقها في المحادثة أو المنشور.';
+        shareStatus.textContent = 'نسخت الصورة إلى الحافظة — الصقها في المحادثة أو قم بلصقها في منشور.';
       } catch(err){ console.warn('clipboard write failed', err); shareStatus.textContent = 'النسخ إلى الحافظة فشل.'; }
     }
-    // fallback: provide download link
+    // provide download link as fallback
     const url = URL.createObjectURL(blob);
     shareStatus.innerHTML = `الصورة جاهزة. <a href="${url}" download="quran-progress.png">اضغط هنا لتحميلها</a> — ثم شاركها على فيسبوك/واتساب.`;
     shareWasap.onclick = ()=> {
@@ -698,12 +734,14 @@ shareCopy.addEventListener('click', async ()=> {
   }catch(e){ console.error(e); shareStatus.textContent = 'النسخ إلى الحافظة غير متوفر أو فشل.'; }
 });
 
-/* Donation link setup */
-donateLink.href = DONATION_URL;
+/* Donate button behavior */
+donateBtn.addEventListener('click', ()=> {
+  if(DONATION_LINK && DONATION_LINK !== '#') window.open(DONATION_LINK, '_blank');
+  else alert('لم يتم ضبط رابط التبرع بعد.');
+});
 
-/* start */
+/* Start */
 loadAndInjectSVG();
-updateUI();
 </script>
 </body>
 </html>

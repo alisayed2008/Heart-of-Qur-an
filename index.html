@@ -46,7 +46,7 @@
   .heart-container{background:transparent;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;min-height:380px}
   svg{max-width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
 
-  /* ---------- stroke black/white always, base fill gray, revealed fill red ---------- */
+  /* ---------- stroke color always, base fill gray, revealed fill red ---------- */
   .segment{
     fill: var(--base-fill) !important;    /* base: light gray (or dark in dark mode) */
     stroke: var(--stroke) !important;     /* outline color follows theme */
@@ -114,9 +114,7 @@
   }
   #theme-toggle svg{width:28px;height:28px;transition:transform .5s ease,color .3s ease}
   #theme-toggle.spin svg{transform:rotate(360deg)}
-  /* gear stroke color */
   .gear-fill{fill:var(--toggle-color);transition:fill .25s ease}
-  [data-theme="dark"] .gear-fill{fill:var(--toggle-color)}
 
   /* responsive: mobile layout vertical */
   @media (max-width:900px){
@@ -125,7 +123,6 @@
     .sidebar{width:100%;order:3}
     .card-header{flex-direction:row;gap:8px}
     .controls{width:100%;justify-content:space-between}
-    .controls .left{order:0}
     .donate-btn{display:block;width:100%;text-align:center}
     footer.note{text-align:center}
     #theme-toggle{right:8px;top:8px}
@@ -135,7 +132,7 @@
 <body>
 <!-- Theme toggle button (top-right) -->
 <button id="theme-toggle" aria-label="تبديل الوضع" title="تبديل الوضع">
-  <!-- simple gear svg -->
+  <!-- gear svg -->
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path class="gear-fill" d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.43-2.1l1.77-1.37a1 1 0 0 0 .24-1.34l-1.68-2.9a1 1 0 0 0-1.17-.44l-2.08.84a7.02 7.02 0 0 0-1.6-.93l-.32-2.18A1 1 0 0 0 13.5 1h-3a1 1 0 0 0-.99.86l-.32 2.18c-.56.24-1.09.55-1.6.93l-2.08-.84a1 1 0 0 0-1.17.44L1.6 10.69a1 1 0 0 0 .24 1.34l1.77 1.37c-.02.36-.02.72 0 1.08l-1.77 1.37a1 1 0 0 0-.24 1.34l1.68 2.9a1 1 0 0 0 1.17.44l2.08-.84c.51.38 1.04.69 1.6.93l.32 2.18A1 1 0 0 0 9 23h3a1 1 0 0 0 .99-.86l.32-2.18c.56-.24 1.09-.55 1.6-.93l2.08.84a1 1 0 0 0 1.17-.44l1.68-2.9a1 1 0 0 0-.24-1.34l-1.77-1.37c.02-.36.02-.72 0-1.08z"/>
   </svg>
@@ -164,7 +161,6 @@
 
       <footer class="note">
         <div>لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.</div>
-        <!-- Donation button (replace link below) -->
         <a id="donate-btn" class="donate-btn" href="YOUR_DONATE_LINK_HERE" target="_blank" rel="noopener noreferrer">تبرع لمطور الموقع</a>
       </footer>
     </div>
@@ -244,51 +240,15 @@
 </div>
 
 <script>
-/* ===========================
-   تعديل مضاف: الوضع (داكن/فاتح),
-   تنسيق موبايل، زر تبرع، قلب ملء رمادي افتراضي
-   =========================== */
-
-const DONATE_URL = 'YOUR_DONATE_LINK_HERE'; // <- ضع رابط التبرع هنا
-
-// theme toggle
-const themeToggle = document.getElementById('theme-toggle');
-const root = document.documentElement;
-const preferDark = (localStorage.getItem('quran_theme') === 'dark');
-if(preferDark) root.setAttribute('data-theme','dark');
-
-function applySpinOnce() {
-  themeToggle.classList.add('spin');
-  setTimeout(()=> themeToggle.classList.remove('spin'), 600);
-}
-
-themeToggle.addEventListener('click', ()=>{
-  applySpinOnce();
-  const current = root.getAttribute('data-theme');
-  if(current === 'dark'){
-    root.removeAttribute('data-theme');
-    localStorage.setItem('quran_theme','light');
-  } else {
-    root.setAttribute('data-theme','dark');
-    localStorage.setItem('quran_theme','dark');
-  }
-});
-
-// ensure donate link set
-const donateBtn = document.getElementById('donate-btn');
-if(donateBtn){
-  donateBtn.setAttribute('href', DONATE_URL);
-  donateBtn.addEventListener('click', ()=> {
-    // nothing extra; link opens in new tab (target blank)
-  });
-}
-
-/* ===========================
-   باقي الكود — محفوظ من نسختك مع إضافات التحسينات المطلوبة
-   (لم أغير منطق الحفظ/المشاركة — فقط أضفت responsive + theme)
-   =========================== */
+/* ========= final integrated index.html script =========
+   - keeps your original structure and logic
+   - adds: base fill gray, theme toggle, donate button (link placeholder),
+     responsive mobile layout, celebration, share-as-image
+   NOTE: SVG file must be in same folder and named 'heart_segments_named.svg'
+*/
 
 const SVG_FILE = 'heart_segments_named.svg'; // تأكد اسم ملف الـSVG هنا
+const DONATE_URL = 'YOUR_DONATE_LINK_HERE'; // ضع رابط التبرع هنا
 
 // DOM refs
 const heartWrap = document.getElementById('heart-wrap');
@@ -324,6 +284,31 @@ let segments = [];
 let saved = JSON.parse(localStorage.getItem('quran_heart_progress') || '{}') || {};
 if (!saved || typeof saved !== 'object') saved = {};
 
+// set donate link if present
+const donateBtn = document.getElementById('donate-btn');
+if(donateBtn) donateBtn.setAttribute('href', DONATE_URL);
+
+// Theme toggle: restore saved theme
+const themeToggle = document.getElementById('theme-toggle');
+const root = document.documentElement;
+const preferDark = (localStorage.getItem('quran_theme') === 'dark');
+if(preferDark) root.setAttribute('data-theme','dark');
+function applySpinOnce() {
+  themeToggle.classList.add('spin');
+  setTimeout(()=> themeToggle.classList.remove('spin'), 600);
+}
+themeToggle.addEventListener('click', ()=>{
+  applySpinOnce();
+  const current = root.getAttribute('data-theme');
+  if(current === 'dark'){
+    root.removeAttribute('data-theme');
+    localStorage.setItem('quran_theme','light');
+  } else {
+    root.setAttribute('data-theme','dark');
+    localStorage.setItem('quran_theme','dark');
+  }
+});
+
 // Helper: load & inject svg (keeps your structure)
 async function loadAndInjectSVG(){
   try{
@@ -349,9 +334,7 @@ function updateUI(){
   countText.textContent = `${done} / ${total}`;
   lastText.textContent = saved._last ? `آخر: ${saved._last}` : 'لا شيء محفوظ';
   progressFill.style.width = total ? `${Math.round((done/total)*100)}%` : '0%';
-  // show share button if at least one saved
   btnShare.style.display = done > 0 ? 'inline-block' : 'none';
-  // check completion
   if(total && done === total && !saved._celebrated){
     saved._celebrated = true;
     localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
@@ -399,7 +382,7 @@ function initializeSegments(){
   });
 }
 
-/* outlines and labels (keeps your existing flow) */
+/* --- outlines and labels: generate top outlines and centered labels for segments --- */
 function createOutlinesAndLabels(svgRoot){
   try{
     const existingOut = svgRoot.querySelector('#__outlines_group');
@@ -450,8 +433,8 @@ function createOutlinesAndLabels(svgRoot){
 
   }catch(e){ console.warn('createOutlinesAndLabels failed',e); }
 }
+/* --- end outlines/labels --- */
 
-/* drawing overlay + reveal (preserves outlines) */
 function animateDrawThenReveal(seg, name, onDone){
   const svgRoot = heartWrap.querySelector('svg');
   if(!svgRoot){
@@ -493,7 +476,7 @@ function animateDrawThenReveal(seg, name, onDone){
   }
 }
 
-/* Celebration visuals (unchanged, responsive) */
+/* ===== Celebration helpers ===== */
 function createConfetti(areaEl, count=180){
   areaEl.innerHTML = '';
   const style = document.createElement('style');
@@ -564,7 +547,7 @@ celebrationClose.addEventListener('click', ()=> {
   confettiArea.innerHTML=''; balloons.innerHTML=''; lights.innerHTML='';
 });
 
-/* Modal handlers (kept) */
+/* ===== Modal handlers ===== */
 modalCancel.addEventListener('click', ()=>{ modalEl.style.display='none'; modalEl.dataset.target=''; });
 
 modalConfirm.addEventListener('click', ()=>{
@@ -573,6 +556,7 @@ modalConfirm.addEventListener('click', ()=>{
   const seg = segments.find(s => (s.getAttribute('data-name') || s.getAttribute('id')) === name);
   if(!seg){ modalEl.style.display='none'; return; }
 
+  // Special-case: الفاتحة — تسجل محفوظة بدون تلوين (تجنُب لأن الفاتحة قد تمثل مساراً يغطي القلب كله)
   if(name === 'الفاتحة'){
     saved[name] = true;
     saved._last = name;

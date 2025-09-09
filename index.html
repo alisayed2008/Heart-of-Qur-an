@@ -8,45 +8,75 @@
 <style>
   :root{
     --bg: #ffffff;
+    --card-bg: linear-gradient(180deg,#fff,#fbfdff);
+    --text: #071133;
     --accent: #ff4d4d;
     --accent-strong: #e60000;
     --muted: #6b7280;
     --shadow: 0 12px 40px rgba(2,6,23,0.08);
   }
+  body.dark {
+    --bg:#071022;
+    --card-bg: linear-gradient(180deg,#091023,#081018);
+    --text: #e6eef8;
+    --muted: #9fb0c8;
+    --shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:'El Messiri',sans-serif;background:var(--bg);color:#071133}
-  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;}
-  .panel{width:100%;max-width:1200px;border-radius:16px;background:linear-gradient(180deg,#fff,#fcfdff);box-shadow:var(--shadow);display:flex;gap:20px;padding:18px;}
-  .card{flex:0 0 68%;padding:14px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#fbfdff);border:1px solid #eef4fb;min-width:320px}
-  .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  html,body{height:100%;margin:0;font-family:'El Messiri',sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:12px;}
+  .theme-toggle{position:fixed;top:10px;right:10px;z-index:999;border-radius:10px;padding:8px 10px;border:none;background:#fff;color:#111;box-shadow:0 6px 18px rgba(0,0,0,0.08);cursor:pointer}
+  body.dark .theme-toggle{background:#0b1220;color:#fff}
+
+  .panel{width:100%;max-width:1200px;border-radius:12px;background:var(--card-bg);box-shadow:var(--shadow);display:flex;gap:16px;padding:14px;margin-top:36px}
+  .card{flex:0 0 68%;padding:12px;border-radius:10px;background:transparent;border:1px solid rgba(0,0,0,0.04);min-width:280px}
+  .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
   .title{font-size:18px;font-weight:700}
   .sub{color:var(--muted);font-size:13px}
-  .heart-container{background:linear-gradient(180deg,#fff,#f7fbff);padding:12px;border-radius:12px;border:1px solid #eef6fc;display:flex;align-items:center;justify-content:center;min-height:380px}
+  .heart-container{background:transparent;padding:8px;border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:300px}
   svg{max-width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
 
-  /* ---------- stroke black always, fill only when revealed ---------- */
+  /* stroke black always, fill only when revealed */
   .segment{
-    fill: transparent !important;      /* interior empty from start */
-    stroke: #000 !important;           /* black outlines always */
+    fill: transparent !important;
+    stroke: #000 !important;
     stroke-width: 1.6 !important;
     cursor: pointer;
-    transition: transform .18s ease, filter .18s ease, fill .25s ease;
+    transition: transform .14s ease, filter .14s ease, fill .25s ease;
   }
-  .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
+  body.dark .segment{ stroke:#fff !important } /* in dark keep outlines visible */
+  .segment:hover{transform:translateY(-3px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
   .segment.revealed{
-    fill: var(--accent) !important;    /* red fill only when revealed */
-    stroke: #000 !important;           /* outline remains black */
+    fill: var(--accent) !important;
+    stroke: #000 !important;
   }
+  body.dark .segment.revealed{ stroke:#fff !important }
+
+  /* search highlight pulse (temporary) */
+  @keyframes pulse-stroke {
+    0%{ stroke-width:2.6; stroke: #ffd54d; filter: drop-shadow(0 0 6px rgba(255,213,77,0.8)); }
+    50%{ stroke-width:3.6; stroke: #ff8a65; filter: drop-shadow(0 0 18px rgba(255,138,101,0.9)); }
+    100%{ stroke-width:2.6; stroke: #ffd54d; filter: drop-shadow(0 0 6px rgba(255,213,77,0.8)); }
+  }
+  @keyframes pulse-text {
+    0%{ fill:#ffd54d; text-shadow: 0 0 4px rgba(255,213,77,0.6); }
+    50%{ fill:#ff8a65; text-shadow: 0 0 10px rgba(255,138,101,0.9); }
+    100%{ fill:#ffd54d; text-shadow: 0 0 4px rgba(255,213,77,0.6); }
+  }
+  .segment.search-highlight{ animation: pulse-stroke 0.9s ease-in-out 0s 4; }
+  svg text.segment-label.search-highlight{ animation: pulse-text 0.9s ease-in-out 0s 4; }
 
   .overlay-draw{pointer-events:none; fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;}
 
   .outline{fill:none;stroke:#000;stroke-width:1.6;pointer-events:none}
-  svg text.segment-label{font-size:10px;font-weight:600;fill:#071133;pointer-events:none;text-anchor:middle;dominant-baseline:central;font-family:'El Messiri',sans-serif}
+  body.dark .outline{ stroke:#fff }
+  svg text.segment-label{font-size:10px;font-weight:600;fill:var(--text);pointer-events:none;text-anchor:middle;dominant-baseline:central;font-family:'El Messiri',sans-serif}
   svg text.segment-label.revealed{fill:#ffffff}
 
   /* sidebar */
   .sidebar{flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px}
-  .panel-block{background:#fff;padding:12px;border-radius:10px;border:1px solid #f0f6fb;box-shadow:0 6px 18px rgba(12,15,35,0.03)}
+  .panel-block{background:transparent;padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.04)}
   .progress-bar{height:12px;background:#eef6fb;border-radius:8px;overflow:hidden}
   .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-strong));width:0%;transition:width .6s ease}
   .big-num{font-weight:700;font-size:18px}
@@ -54,15 +84,20 @@
   .controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
   .controls .left { margin-right:auto; display:flex; gap:8px; align-items:center; }
   button.btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;box-shadow:0 8px 20px rgba(255,77,77,0.14)}
-  button.ghost{background:transparent;border:1px solid #e6eef7;color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer}
 
   .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:60}
-  .modal{background:white;padding:18px;border-radius:12px;min-width:320px;box-shadow:0 18px 60px rgba(2,6,23,0.25)}
+  .modal{background:var(--bg);padding:18px;border-radius:12px;min-width:320px;box-shadow:0 18px 60px rgba(2,6,23,0.25)}
   .modal h3{margin:0 0 8px}
   .modal p{margin:0 0 14px;color:var(--muted)}
   .modal .row{display:flex;gap:10px;justify-content:flex-end}
 
   footer.note{font-size:13px;color:var(--muted);margin-top:8px}
+
+  /* Donation button styled as button */
+  .donate-btn{display:inline-block;margin-top:8px;background:transparent;border:1px solid rgba(0,0,0,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+  body.dark .donate-btn{border-color: rgba(255,255,255,0.06)}
+
   /* Celebration overlay */
   #celebrate{display:none;position:fixed;inset:0;z-index:120;pointer-events:none}
   #celebrate .back{position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter: blur(2px)}
@@ -76,25 +111,45 @@
 
   /* Share modal */
   #share-modal{display:none;position:fixed;inset:0;align-items:center;justify-content:center;z-index:130;background:rgba(0,0,0,0.45)}
-  #share-box{background:white;padding:16px;border-radius:12px;min-width:320px;max-width:420px}
+  #share-box{background:var(--bg);padding:16px;border-radius:12px;min-width:320px;max-width:420px;color:var(--text)}
 
-  /* responsive */
-  @media (max-width:980px){.panel{flex-direction:column}.card{width:100%}.controls{justify-content:flex-start}}
+  /* search input */
+  .search-box{display:flex;gap:8px;align-items:center}
+  .search-box input{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:var(--text)}
+  .search-box button{padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;color:var(--text)}
+
+  /* responsive: mobile vertical layout */
+  @media (max-width:880px){
+    .panel{flex-direction:column;padding:12px;margin-top:64px}
+    .card{order:0}
+    .sidebar{order:1}
+    .card-header{flex-direction:column;align-items:flex-start;gap:8px}
+    .controls{width:100%;justify-content:space-between}
+    .heart-container{min-height:320px}
+    .theme-toggle{top:8px;right:8px}
+  }
 </style>
 </head>
 <body>
+<button id="theme-toggle" class="theme-toggle" aria-label="تبديل الوضع">وضع داكن/فاتح</button>
+
 <div class="wrap">
-  <div class="panel">
+  <div class="panel" role="main" aria-label="قلب الحفظ">
     <div class="card">
       <div class="card-header">
         <div>
           <div class="title">خريطة حفظ القرآن — القلب</div>
           <div class="sub">اضغط أي جزء لتأكيد الحفظ. التقدم يُخزّن على جهازك.</div>
         </div>
+
         <div class="controls" role="toolbar" aria-label="controls">
           <div class="left">
             <button class="ghost" id="btn-list" title="عرض السور المحفوظة">قائمة</button>
             <button class="ghost" id="btn-share" title="مشاركة التقدم" style="display:none">شارك التقدم</button>
+            <div class="search-box" style="margin-left:8px;">
+              <input id="search-input" placeholder="اكتب اسم السورة" aria-label="بحث عن سورة" />
+              <button id="search-btn" title="بحث">بحث</button>
+            </div>
           </div>
           <button class="btn" id="btn-reset" title="إعادة التقدم">إعادة</button>
         </div>
@@ -104,14 +159,19 @@
         <div id="svg-loader" class="muted">جارٍ تحميل القلب…</div>
       </div>
 
-      <footer class="note">لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.</footer>
+      <footer class="note">
+        لو احتجت أغير حجم الخط داخل التقسيمات أو أظهر أسماء السور بشكل أكبر/أصغر أخبرني.
+        <div style="margin-top:10px">
+          <button id="donate-btn" class="donate-btn">تبرع لمطور الموقع</button>
+        </div>
+      </footer>
     </div>
 
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="لوحة التقدم">
       <div class="panel-block">
         <div class="muted">التقدم</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-          <div class="big-num" id="count-text">0 / 0</div>
+          <div class="big-num" id="count-text">0 / 112</div>
           <div class="muted" id="last-text">لا شيء محفوظ</div>
         </div>
         <div style="margin-top:12px" class="progress-bar">
@@ -127,9 +187,9 @@
       <div class="panel-block">
         <div class="muted">ملاحظات</div>
         <ul style="margin:10px 0 0 18px;color:var(--muted);font-size:14px">
-          <li>القلب بالحدود السوداء كما طلبت.</li>
-          <li>الأسماء داخل كل تقسيمة مرئية الآن.</li>
-          <li>الخطوط الفاصلة تبقى مرئية حتى بعد التلوين.</li>
+          <li>القلب بخطوط سوداء ظاهرة ومفرغ من الداخل.</li>
+          <li>التلوين يظهر فقط للأجزاء المحفوظة مع بقاء الخطوط واضحة.</li>
+          <li>زر المشاركة يظهر بعد حفظ جزء واحد على الأقل.</li>
         </ul>
       </div>
     </aside>
@@ -138,7 +198,7 @@
 
 <!-- Modal Confirm -->
 <div id="modal" class="modal-backdrop" aria-hidden="true">
-  <div class="modal" role="dialog">
+  <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modal-title">تأكيد إتمام الحفظ</h3>
     <p id="modal-body">هل أنت متأكد من إتمام حفظ سورة ...؟</p>
     <div class="row">
@@ -171,7 +231,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px">
       <button class="ghost" id="share-wasap">مشاركة واتسآب</button>
       <button class="ghost" id="share-fb">مشاركة فيس بوك</button>
-      <button class="btn" id="share-direct">مشاركة مباشرة / حفظ</button>
+      <button class="btn" id="share-direct">مشاركة/فتح الصورة</button>
       <button class="ghost" id="share-copy">نسخ للصورة</button>
     </div>
     <div style="margin-top:12px;text-align:left;font-size:13px;color:var(--muted)">
@@ -182,9 +242,13 @@
 </div>
 
 <script>
-const SVG_FILE = 'heart_segments_named.svg'; // تأكد اسم ملف الـSVG هنا
+/* ====== إعدادات وسلوكيات ====== */
+const SVG_FILE = 'heart_segments_named.svg';
+const TOTAL_SURAH = 112;
+let DONATION_URL = '#'; // ضع هنا رابط التبرع الذي تريده
 
-// DOM refs
+/* DOM */
+const themeToggle = document.getElementById('theme-toggle');
 const heartWrap = document.getElementById('heart-wrap');
 const loader = document.getElementById('svg-loader');
 const modalEl = document.getElementById('modal');
@@ -199,13 +263,12 @@ const encourage = document.getElementById('encourage');
 const btnReset = document.getElementById('btn-reset');
 const btnList = document.getElementById('btn-list');
 const btnShare = document.getElementById('btn-share');
-
+const donateBtn = document.getElementById('donate-btn');
 const celebrate = document.getElementById('celebrate');
 const confettiArea = document.getElementById('confetti-area');
 const balloons = document.getElementById('balloons');
 const lights = document.getElementById('lights');
 const celebrationClose = document.getElementById('celebration-close');
-
 const shareModal = document.getElementById('share-modal');
 const shareClose = document.getElementById('share-close');
 const shareWasap = document.getElementById('share-wasap');
@@ -213,22 +276,52 @@ const shareFb = document.getElementById('share-fb');
 const shareDirect = document.getElementById('share-direct');
 const shareCopy = document.getElementById('share-copy');
 const shareStatus = document.getElementById('share-status');
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
 
 let segments = [];
 let saved = JSON.parse(localStorage.getItem('quran_heart_progress') || '{}') || {};
 if (!saved || typeof saved !== 'object') saved = {};
 
-// Helper: load & inject svg (keeps your structure)
+// theme init
+function loadTheme(){
+  const t = localStorage.getItem('quran_theme') || 'light';
+  if(t === 'dark') document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
+}
+loadTheme();
+themeToggle.addEventListener('click', ()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('quran_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+});
+
+/* mark الفاتحة as counted and removed from SVG (we'll also set saved['الفاتحة']=true so it's counted) */
+if(!saved._fatihaCounted){
+  saved._fatihaCounted = true;
+  saved['الفاتحة'] = true; // considered saved but not shown
+  localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
+}
+encourage.textContent = 'الفاتحة محسوبة — ابدأ بحفظ باقي السور إن شاء الله.';
+
+/* load & inject svg */
 async function loadAndInjectSVG(){
   try{
     const res = await fetch(SVG_FILE);
     if(!res.ok) throw new Error('SVG not found: ' + res.status);
     const text = await res.text();
     heartWrap.innerHTML = text;
+    // remove any segment that is الفاتحة (if present) to "شيل الفاتحة من القلب"
+    const svgRoot = heartWrap.querySelector('svg');
+    if(svgRoot){
+      const fPaths = Array.from(svgRoot.querySelectorAll('[data-name], [id]')).filter(el=>{
+        const nm = (el.getAttribute('data-name')||el.getAttribute('id')||'').trim();
+        return nm === 'الفاتحة';
+      });
+      fPaths.forEach(el => el.remove());
+    }
     segments = Array.from(heartWrap.querySelectorAll('.segment'));
     loader && loader.remove();
     initializeSegments();
-    const svgRoot = heartWrap.querySelector('svg');
     if(svgRoot) setTimeout(()=>createOutlinesAndLabels(svgRoot), 120);
     updateUI();
   } catch(err){
@@ -237,48 +330,42 @@ async function loadAndInjectSVG(){
   }
 }
 
+/* update UI + counts */
 function updateUI(){
-  const total = segments.length;
-  const done = Object.keys(saved).filter(k => k !== '_last' && k !== '_celebrated').length;
-  countText.textContent = `${done} / ${total}`;
+  const revealedCount = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated' && k!=='_fatihaCounted' && k!=='الفاتحة').length;
+  // include الفاتحة counted flag
+  const counted = revealedCount + (saved._fatihaCounted ? 1 : 0);
+  countText.textContent = `${counted} / ${TOTAL_SURAH}`;
   lastText.textContent = saved._last ? `آخر: ${saved._last}` : 'لا شيء محفوظ';
-  progressFill.style.width = total ? `${Math.round((done/total)*100)}%` : '0%';
-  // show share button if at least one saved
-  btnShare.style.display = done > 0 ? 'inline-block' : 'none';
-  // check completion
-  if(total && done === total && !saved._celebrated){
+  progressFill.style.width = TOTAL_SURAH ? `${Math.round((counted/TOTAL_SURAH)*100)}%` : '0%';
+  btnShare.style.display = revealedCount > 0 ? 'inline-block' : 'none';
+  if(TOTAL_SURAH && counted === TOTAL_SURAH && !saved._celebrated){
     saved._celebrated = true;
     localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
     showCelebration();
   }
 }
 
+/* initialize segments (same flow as original, but ensure stroke visible, and don't auto-reveal فاتحة) */
 function initializeSegments(){
   if(!segments.length){
     heartWrap.querySelector('#svg-loader')?.remove();
     heartWrap.insertAdjacentHTML('beforeend','<div class="muted">لا يوجد مقاطع (segments) في الـSVG</div>');
     return;
   }
-
   segments.forEach(seg=>{
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
-
-    // Force outlines and empty fill from the start (do not change structure)
     seg.setAttribute('fill','transparent');
     seg.setAttribute('stroke', seg.getAttribute('stroke') || '#000');
     seg.style.cursor = 'pointer';
-
-    if(saved[name]){
-      seg.classList.add('revealed');
-    }
-
+    // only reveal if actually saved (we still set saved['الفاتحة']=true but its element was removed above)
+    if(saved[name]) seg.classList.add('revealed');
     try{
       const len = seg.getTotalLength();
       seg.style.strokeDasharray = len;
       seg.style.strokeDashoffset = len;
       seg.dataset._len = len;
     } catch(e){}
-
     seg.addEventListener('click', (e)=>{
       e.preventDefault();
       if(saved[name]) {
@@ -293,7 +380,7 @@ function initializeSegments(){
   });
 }
 
-/* outlines and labels (keeps your existing flow) */
+/* outlines & labels */
 function createOutlinesAndLabels(svgRoot){
   try{
     const existingOut = svgRoot.querySelector('#__outlines_group');
@@ -309,14 +396,13 @@ function createOutlinesAndLabels(svgRoot){
         clone.classList.remove('segment');
         clone.classList.add('outline');
         clone.setAttribute('fill','none');
-        clone.setAttribute('stroke','#000');
+        clone.setAttribute('stroke', window.getComputedStyle(document.body).classList.contains('dark') ? '#fff' : '#000');
         clone.setAttribute('stroke-width','1.6');
         clone.style.pointerEvents = 'none';
         outlinesG.appendChild(clone);
 
         const name = seg.getAttribute('data-name') || seg.getAttribute('id') || '';
-        let cx = 0, cy = 0;
-        let bb = null;
+        let cx=0,cy=0,bb=null;
         try{ bb = seg.getBBox(); cx = bb.x + bb.width/2; cy = bb.y + bb.height/2; } catch(e){
           const sbb = svgRoot.getBBox(); cx = sbb.width/2; cy = sbb.height/2;
         }
@@ -325,51 +411,48 @@ function createOutlinesAndLabels(svgRoot){
         txt.setAttribute('x',cx);
         txt.setAttribute('y',cy);
         txt.textContent = name;
-        try{ const size = Math.max(8, Math.min(14, Math.round(Math.min(bb.width, bb.height) * 0.18))); txt.style.fontSize = size + 'px'; }catch(e){}
         labelsG.appendChild(txt);
-      }catch(err){
-        console.warn('outline/label err',err);
-      }
+      }catch(err){ console.warn('outline/label err',err); }
     });
-
     svgRoot.appendChild(outlinesG);
     svgRoot.appendChild(labelsG);
-
-    segments.forEach((s,i)=>{
+    segments.forEach(s=>{
       const name = s.getAttribute('data-name') || s.getAttribute('id') || '';
-      const label = labelsG.children[i];
-      if(!label) return;
-      if(saved[name]) label.classList.add('revealed');
+      if(saved[name]){
+        const labelsG2 = svgRoot.querySelector('#__labels_group');
+        if(labelsG2){
+          for(let i=0;i<labelsG2.children.length;i++){
+            const lab = labelsG2.children[i];
+            if(lab && lab.textContent.trim() === name) lab.classList.add('revealed');
+          }
+        }
+      }
     });
-
   }catch(e){ console.warn('createOutlinesAndLabels failed',e); }
 }
 
-/* ---------- drawing overlay + reveal (keeps outlines visible) ---------- */
+/* animate draw + reveal (overlay) */
 function animateDrawThenReveal(seg, name, onDone){
   const svgRoot = heartWrap.querySelector('svg');
-  if(!svgRoot){
-    seg.classList.add('revealed'); if(typeof onDone==='function') onDone(); return;
-  }
+  if(!svgRoot){ seg.classList.add('revealed'); if(typeof onDone==='function') onDone(); return; }
   try{
     const overlay = seg.cloneNode(false);
     overlay.classList.add('overlay-draw');
     overlay.setAttribute('fill','none');
-    overlay.setAttribute('stroke', 'var(--accent)');
+    overlay.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d');
     overlay.setAttribute('stroke-width','2.6');
     let len = 0;
     try{ len = overlay.getTotalLength(); }catch(e){ len = seg.dataset._len || 0; }
     overlay.style.strokeDasharray = len;
     overlay.style.strokeDashoffset = len;
     overlay.style.transition = 'stroke-dashoffset 0.45s linear';
-    // insert before outlines group so outlines remain on top
     const outlinesG = svgRoot.querySelector('#__outlines_group');
     if(outlinesG) svgRoot.insertBefore(overlay, outlinesG);
     else svgRoot.appendChild(overlay);
     void overlay.getBoundingClientRect();
     requestAnimationFrame(()=> overlay.style.strokeDashoffset = '0');
     const handler = function(ev){
-      if(ev && ev.propertyName && ev.propertyName !== 'stroke-dashoffset' && ev.propertyName !== 'strokeDashoffset') return;
+      if(ev && ev.propertyName && ev.propertyName!=='stroke-dashoffset' && ev.propertyName!=='strokeDashoffset') return;
       overlay.removeEventListener('transitionend', handler);
       try{ overlay.remove(); }catch(e){}
       seg.classList.add('revealed');
@@ -384,12 +467,13 @@ function animateDrawThenReveal(seg, name, onDone){
       }
     }, 900);
   } catch(e){
-    seg.classList.add('revealed'); if(typeof onDone==='function') onDone();
+    seg.classList.add('revealed');
+    if(typeof onDone==='function') onDone();
   }
 }
 
-/* ===== Celebration visuals ===== */
-function createConfetti(areaEl, count=200){
+/* celebration visuals (same as before) */
+function createConfetti(areaEl, count=180){
   areaEl.innerHTML = '';
   const style = document.createElement('style');
   style.textContent = `@keyframes confetti-fall {0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:.9}}`;
@@ -432,7 +516,7 @@ function createBalloons(container, n=12){
     container.appendChild(b);
   }
 }
-function createLights(container, n=30){
+function createLights(container, n=28){
   container.innerHTML = '';
   for(let i=0;i<n;i++){
     const dot = document.createElement('div');
@@ -446,16 +530,13 @@ function createLights(container, n=30){
   }
 }
 function showCelebration(){
-  createConfetti(confettiArea, 180);
-  createBalloons(balloons, 14);
-  createLights(lights, 28);
+  createConfetti(confettiArea, 160);
+  createBalloons(balloons, 12);
+  createLights(lights, 24);
   celebrate.style.display = 'block';
   celebrate.setAttribute('aria-hidden','false');
   celebrate.style.pointerEvents = 'auto';
-  // auto close after 12s
-  setTimeout(()=> {
-    celebrationClose.focus && celebrationClose.focus();
-  }, 300);
+  setTimeout(()=> { celebrationClose.focus && celebrationClose.focus(); }, 300);
 }
 celebrationClose.addEventListener('click', ()=> {
   celebrate.style.display='none';
@@ -463,7 +544,7 @@ celebrationClose.addEventListener('click', ()=> {
   confettiArea.innerHTML=''; balloons.innerHTML=''; lights.innerHTML='';
 });
 
-/* ===== Modal handlers (existing flow) ===== */
+/* modal handlers */
 modalCancel.addEventListener('click', ()=>{ modalEl.style.display='none'; modalEl.dataset.target=''; });
 
 modalConfirm.addEventListener('click', ()=>{
@@ -471,18 +552,6 @@ modalConfirm.addEventListener('click', ()=>{
   if(!name) return modalEl.style.display='none';
   const seg = segments.find(s => (s.getAttribute('data-name') || s.getAttribute('id')) === name);
   if(!seg){ modalEl.style.display='none'; return; }
-
-  // Special-case: الفاتحة — تسجل محفوظة بدون تلوين (تجنُب لأن الفاتحة قد تمثل مساراً يغطي القلب كله)
-  if(name === 'الفاتحة'){
-    saved[name] = true;
-    saved._last = name;
-    localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
-    updateUI();
-    encourage.textContent = `سورة الفاتحة تم تسجيلها (غير ملونة لتجنب تغطية القلب).`;
-    modalEl.style.display = 'none';
-    return;
-  }
-
   try{
     animateDrawThenReveal(seg, name, () => {
       saved[name] = true;
@@ -513,12 +582,14 @@ modalConfirm.addEventListener('click', ()=>{
   }
 });
 
-/* reset */
+/* reset & list */
 btnReset.addEventListener('click', ()=>{
   const ok = confirm('هل تريد إعادة التقدم من البداية؟ سيتم حذف التقدم المخزن على جهازك.');
   if(!ok) return;
   localStorage.removeItem('quran_heart_progress');
   saved = {};
+  saved._fatihaCounted = true; // keep الفاتحة محسوبة
+  saved['الفاتحة'] = true;
   segments.forEach(s => s.classList.remove('revealed'));
   const svgRoot = heartWrap.querySelector('svg');
   if(svgRoot){
@@ -526,32 +597,69 @@ btnReset.addEventListener('click', ()=>{
     if(labelsG) for(let i=0;i<labelsG.children.length;i++) labelsG.children[i].classList.remove('revealed');
   }
   updateUI();
-  encourage.textContent = 'تمت إعادة كل شيء — بالتوفيق في البدء من جديد 🌱';
+  encourage.textContent = 'تمت إعادة كل شيء — الفاتحة محسوبة كبداية، ابدأ من جديد بالتوفيق 🌱';
 });
 
-/* list */
 btnList.addEventListener('click', ()=>{
-  const done = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated');
+  const done = Object.keys(saved).filter(k=>k!=='_last' && k!=='_celebrated' && k!=='_fatihaCounted' && k!=='الفاتحة');
   if(done.length === 0) return alert('لم تحفظ أي سورة بعد.');
   alert(`السور المحفوظة (${done.length}):\n` + done.join(', '));
 });
 
-/* ====== SHARE: generate PNG from SVG, then share/download/copy ====== */
+/* SEARCH: highlight matches temporarily (pulse), doesn't save */
+function doSearch(term){
+  if(!term || !segments.length) return;
+  const q = term.trim();
+  if(!q) return;
+  const matched = segments.filter(s => {
+    const name = (s.getAttribute('data-name') || s.getAttribute('id') || '').trim();
+    return name.includes(q);
+  });
+  // clear previous highlights
+  segments.forEach(s => s.classList.remove('search-highlight'));
+  const svgRoot = heartWrap.querySelector('svg');
+  const labelsG = svgRoot ? svgRoot.querySelector('#__labels_group') : null;
+  if(labelsG) Array.from(labelsG.children).forEach(l => l.classList.remove('search-highlight'));
+  if(!matched.length){
+    encourage.textContent = 'لم أجد السورة، حاول كتابة جزء آخر من الاسم.';
+    return;
+  }
+  matched.forEach(s=>{
+    s.classList.add('search-highlight');
+    // highlight label if exists
+    if(labelsG){
+      for(let i=0;i<labelsG.children.length;i++){
+        const lab = labelsG.children[i];
+        if(lab && (s.getAttribute('data-name')||s.getAttribute('id')||'').trim() === (lab.textContent||'').trim()){
+          lab.classList.add('search-highlight');
+        }
+      }
+    }
+    // remove highlight after 3.6s (pulse 4 iterations of 0.9s)
+    setTimeout(()=> {
+      s.classList.remove('search-highlight');
+      if(labelsG) for(let i=0;i<labelsG.children.length;i++){
+        const lab = labelsG.children[i];
+        if(lab) lab.classList.remove('search-highlight');
+      }
+    }, 3600);
+  });
+  encourage.textContent = `تم تمييز ${matched.length} موضع/مواضع — اضغط على الجزء ثم أكد للحفظ.`;
+}
+searchBtn.addEventListener('click', ()=> doSearch(searchInput.value));
+searchInput.addEventListener('keypress', (e)=> { if(e.key === 'Enter') doSearch(searchInput.value); });
+
+/* SHARE: generate PNG with white background (as requested) */
 async function svgToPngBlob(svgEl, scale=2){
-  // clone and prepare
   const clone = svgEl.cloneNode(true);
-  // remove overlay-draw (if any), keep outlines
   clone.querySelectorAll('.overlay-draw').forEach(n=>n.remove());
-  // inline styles: ensure segments have fill/stroke attributes so serialization matches visuals
   const segs = clone.querySelectorAll('.segment');
   segs.forEach(s=>{
     const name = s.getAttribute('data-name') || s.getAttribute('id');
     const isRevealed = Boolean(saved[name]);
-    s.setAttribute('stroke','#000');
-    s.setAttribute('fill', isRevealed ? getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d' : 'transparent');
+    s.setAttribute('stroke', getComputedStyle(document.body).classList.contains('dark') ? '#fff' : '#000');
+    s.setAttribute('fill', isRevealed ? '#ff4d4d' : 'transparent');
   });
-  // also ensure outline group is present; labels will be kept
-  // serialize
   const svgString = new XMLSerializer().serializeToString(clone);
   const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
   const img = new Image();
@@ -563,7 +671,7 @@ async function svgToPngBlob(svgEl, scale=2){
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff00'; // transparent background
+  ctx.fillStyle = '#ffffff'; // white background
   ctx.fillRect(0,0,width,height);
   ctx.drawImage(img, 0, 0, width, height);
   return new Promise((resolve)=> canvas.toBlob(resolve, 'image/png'));
@@ -576,7 +684,6 @@ async function shareProgressAsImage(){
   try{
     const blob = await svgToPngBlob(svgRoot, 2);
     if(!blob) throw new Error('لم يتم إنشاء الصورة');
-    // try Web Share API with files
     const file = new File([blob], 'quran-progress.png', { type: 'image/png' });
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       try {
@@ -585,22 +692,17 @@ async function shareProgressAsImage(){
         shareModal.style.display='none';
         return;
       } catch (err) {
-        // fallthrough to other options
         console.warn('share failed', err);
       }
     }
-    // try copy to clipboard (image)
     if(navigator.clipboard && navigator.clipboard.write){
       try{
         await navigator.clipboard.write([ new ClipboardItem({ "image/png": blob }) ]);
-        shareStatus.textContent = 'نسخت الصورة إلى الحافظة — الصقها في المحادثة أو قم بلصقها في منشور.';
+        shareStatus.textContent = 'نسخت الصورة إلى الحافظة — الصقها في المحادثة أو المنشور.';
       } catch(err){ console.warn('clipboard write failed', err); shareStatus.textContent = 'النسخ إلى الحافظة فشل.'; }
     }
-    // provide download link as fallback
     const url = URL.createObjectURL(blob);
-    // set download by opening new tab or providing link
     shareStatus.innerHTML = `الصورة جاهزة. <a href="${url}" download="quran-progress.png">اضغط هنا لتحميلها</a> — ثم شاركها على فيسبوك/واتساب.`;
-    // open WhatsApp web with a message (user must attach image manually if desktop)
     shareWasap.onclick = ()=> {
       const text = encodeURIComponent('هذا تقدّمي في حفظ سور القرآن — ما شاء الله\n');
       const whatsappUrl = `https://wa.me/?text=${text}`;
@@ -608,10 +710,8 @@ async function shareProgressAsImage(){
     };
     shareFb.onclick = ()=> {
       const text = encodeURIComponent('تقدّمي في حفظ سور القرآن — ما شاء الله');
-      // Facebook share via sharer requires URL — so we open FB share dialog to let user attach image manually
       window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(location.href) + '&quote=' + text, '_blank');
     };
-    // direct save opens the image
     shareDirect.onclick = ()=> { window.open(url, '_blank'); };
   } catch(err){
     console.error(err);
@@ -638,8 +738,15 @@ shareCopy.addEventListener('click', async ()=> {
   }catch(e){ console.error(e); shareStatus.textContent = 'النسخ إلى الحافظة غير متوفر أو فشل.'; }
 });
 
+/* donate button */
+donateBtn.addEventListener('click', ()=> {
+  if(!DONATION_URL || DONATION_URL === '#') return alert('ضع رابط التبرع داخل المتغير DONATION_URL في الكود.');
+  window.open(DONATION_URL, '_blank');
+});
+
 /* start */
 loadAndInjectSVG();
+updateUI();
 </script>
 </body>
 </html>

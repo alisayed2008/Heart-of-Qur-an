@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ar">
 <head>
@@ -32,6 +31,7 @@
     stroke-width: 1.6 !important;
     cursor: pointer;
     transition: transform .18s ease, filter .18s ease, fill .25s ease;
+    vector-effect: non-scaling-stroke;
   }
   .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
   .segment.revealed{
@@ -64,6 +64,10 @@
   .modal .row{display:flex;gap:10px;justify-content:flex-end}
 
   footer.note{font-size:13px;color:var(--muted);margin-top:8px}
+  /* Donation button style (subtle) */
+  .donate-btn{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;opacity:0.9}
+  .donate-btn:hover{opacity:1;text-decoration:underline}
+
   /* Celebration overlay */
   #celebrate{display:none;position:fixed;inset:0;z-index:120;pointer-events:none}
   #celebrate .back{position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter: blur(2px)}
@@ -132,6 +136,10 @@
           <li>الأسماء داخل كل تقسيمة مرئية الآن.</li>
           <li>الخطوط الفاصلة تبقى مرئية حتى بعد التلوين.</li>
         </ul>
+        <!-- subtle donation button -->
+        <div style="margin-top:10px; text-align:left">
+          <button id="donate-btn" class="donate-btn">تبرع لمطور الموقع</button>
+        </div>
       </div>
     </aside>
   </div>
@@ -183,6 +191,12 @@
 </div>
 
 <script>
+/* ============== إعدادات سريعة ==============
+   ضع رابط التبرع هنا (سيُفتح في تاب جديد)
+   لو عايز تحط لينك التبرع: غَيّر القيمة أدناه
+*/
+const DONATION_LINK = '#'; // <-- حط هنا لينك التبرع بتاعك
+
 const SVG_FILE = 'heart_segments_named.svg'; // تأكد اسم ملف الـSVG هنا
 
 // DOM refs
@@ -200,6 +214,7 @@ const encourage = document.getElementById('encourage');
 const btnReset = document.getElementById('btn-reset');
 const btnList = document.getElementById('btn-list');
 const btnShare = document.getElementById('btn-share');
+const donateBtn = document.getElementById('donate-btn');
 
 const celebrate = document.getElementById('celebrate');
 const confettiArea = document.getElementById('confetti-area');
@@ -219,17 +234,66 @@ let segments = [];
 let saved = JSON.parse(localStorage.getItem('quran_heart_progress') || '{}') || {};
 if (!saved || typeof saved !== 'object') saved = {};
 
-// Helper: load & inject svg (keeps your structure)
+/* ======= Helpers: force visibility of strokes & empty fills ======= */
+function enforceStrokeVisibility(svgRoot){
+  if(!svgRoot) return;
+  // apply to typical shape tags
+  const tags = ['path','polygon','polyline','rect','circle','ellipse'];
+  tags.forEach(tag => {
+    Array.from(svgRoot.querySelectorAll(tag)).forEach(el=>{
+      // only touch shapes inside the heart container; avoid logos/text outside
+      // force attributes
+      try{
+        el.setAttribute('stroke', el.getAttribute('stroke') || '#000');
+        el.setAttribute('stroke-width', el.getAttribute('stroke-width') || '1.6');
+        // keep fill transparent unless it's been marked revealed in saved (we'll manage reveals elsewhere)
+        const name = el.getAttribute('data-name') || el.getAttribute('id') || '';
+        if(name && saved[name]) {
+          // If saved and not 'الفاتحة' -> keep revealed class (visual)
+          if(name !== 'الفاتحة') {
+            el.classList.add('revealed');
+          } else {
+            // ensure not filled
+            el.setAttribute('fill','transparent');
+            el.classList.remove('revealed');
+          }
+        } else {
+          el.setAttribute('fill','transparent');
+          el.classList.remove('revealed');
+        }
+        // ensure stroke visible
+        el.style.stroke = '#000';
+        el.style.fill = 'transparent';
+      }catch(e){}
+    });
+  });
+  // also for any existing outlines (if created earlier)
+  Array.from(svgRoot.querySelectorAll('.outline')).forEach(o=>{
+    o.setAttribute('stroke','#000');
+    o.setAttribute('fill','none');
+    o.setAttribute('stroke-width','1.6');
+  });
+}
+
+/* ======= load & inject svg (keeps your structure) ======= */
 async function loadAndInjectSVG(){
   try{
     const res = await fetch(SVG_FILE);
     if(!res.ok) throw new Error('SVG not found: ' + res.status);
     const text = await res.text();
     heartWrap.innerHTML = text;
+    const svgRoot = heartWrap.querySelector('svg');
+    // ensure svg has xmlns so serialization works later
+    if(svgRoot && !svgRoot.getAttribute('xmlns')) svgRoot.setAttribute('xmlns','http://www.w3.org/2000/svg');
+
     segments = Array.from(heartWrap.querySelectorAll('.segment'));
     loader && loader.remove();
+
+    // enforce stroke visibility right away
+    if(svgRoot) enforceStrokeVisibility(svgRoot);
+
     initializeSegments();
-    const svgRoot = heartWrap.querySelector('svg');
+    // create outlines and labels on top
     if(svgRoot) setTimeout(()=>createOutlinesAndLabels(svgRoot), 120);
     updateUI();
   } catch(err){
@@ -238,6 +302,7 @@ async function loadAndInjectSVG(){
   }
 }
 
+/* ======= UI update ======= */
 function updateUI(){
   const total = segments.length;
   const done = Object.keys(saved).filter(k => k !== '_last' && k !== '_celebrated').length;
@@ -254,6 +319,7 @@ function updateUI(){
   }
 }
 
+/* ======= initialize segments (minimal changes) ======= */
 function initializeSegments(){
   if(!segments.length){
     heartWrap.querySelector('#svg-loader')?.remove();
@@ -264,13 +330,16 @@ function initializeSegments(){
   segments.forEach(seg=>{
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
 
-    // Force outlines and empty fill from the start (do not change structure)
+    // Force outlines and empty fill from the start (we don't change structure)
     seg.setAttribute('fill','transparent');
     seg.setAttribute('stroke', seg.getAttribute('stroke') || '#000');
+    seg.setAttribute('stroke-width', seg.getAttribute('stroke-width') || '1.6');
     seg.style.cursor = 'pointer';
 
     if(saved[name]){
-      seg.classList.add('revealed');
+      // but if name is الفاتحة, keep it not filled
+      if(name !== 'الفاتحة') seg.classList.add('revealed');
+      else seg.classList.remove('revealed');
     }
 
     try{
@@ -294,7 +363,7 @@ function initializeSegments(){
   });
 }
 
-/* outlines and labels (keeps your existing flow) */
+/* outlines and labels: same as before (keeps outlines visible on top) */
 function createOutlinesAndLabels(svgRoot){
   try{
     const existingOut = svgRoot.querySelector('#__outlines_group');
@@ -346,7 +415,7 @@ function createOutlinesAndLabels(svgRoot){
   }catch(e){ console.warn('createOutlinesAndLabels failed',e); }
 }
 
-/* ---------- drawing overlay + reveal (keeps outlines visible) ---------- */
+/* animate overlay draw then reveal (keeps outlines top) */
 function animateDrawThenReveal(seg, name, onDone){
   const svgRoot = heartWrap.querySelector('svg');
   if(!svgRoot){
@@ -356,14 +425,13 @@ function animateDrawThenReveal(seg, name, onDone){
     const overlay = seg.cloneNode(false);
     overlay.classList.add('overlay-draw');
     overlay.setAttribute('fill','none');
-    overlay.setAttribute('stroke', 'var(--accent)');
+    overlay.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d');
     overlay.setAttribute('stroke-width','2.6');
     let len = 0;
     try{ len = overlay.getTotalLength(); }catch(e){ len = seg.dataset._len || 0; }
     overlay.style.strokeDasharray = len;
     overlay.style.strokeDashoffset = len;
     overlay.style.transition = 'stroke-dashoffset 0.45s linear';
-    // insert before outlines group so outlines remain on top
     const outlinesG = svgRoot.querySelector('#__outlines_group');
     if(outlinesG) svgRoot.insertBefore(overlay, outlinesG);
     else svgRoot.appendChild(overlay);
@@ -389,7 +457,7 @@ function animateDrawThenReveal(seg, name, onDone){
   }
 }
 
-/* ===== Celebration visuals ===== */
+/* ===== Celebration visuals (as before) ===== */
 function createConfetti(areaEl, count=200){
   areaEl.innerHTML = '';
   const style = document.createElement('style');
@@ -453,10 +521,6 @@ function showCelebration(){
   celebrate.style.display = 'block';
   celebrate.setAttribute('aria-hidden','false');
   celebrate.style.pointerEvents = 'auto';
-  // auto close after 12s
-  setTimeout(()=> {
-    celebrationClose.focus && celebrationClose.focus();
-  }, 300);
 }
 celebrationClose.addEventListener('click', ()=> {
   celebrate.style.display='none';
@@ -537,36 +601,72 @@ btnList.addEventListener('click', ()=>{
   alert(`السور المحفوظة (${done.length}):\n` + done.join(', '));
 });
 
-/* ====== SHARE: generate PNG from SVG, then share/download/copy ====== */
+/* ============ SHARE: generate PNG from SVG, then share/download/copy ============ */
 async function svgToPngBlob(svgEl, scale=2){
   // clone and prepare
   const clone = svgEl.cloneNode(true);
-  // remove overlay-draw (if any), keep outlines
+
+  // ensure clone has xmlns
+  if(!clone.getAttribute('xmlns')) clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+
+  // determine size from bounding box on-screen for crisp rendering
+  const rect = svgEl.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width));
+  const h = Math.max(1, Math.round(rect.height));
+  clone.setAttribute('width', w);
+  clone.setAttribute('height', h);
+  clone.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  // remove any temporary overlay-draw elements
   clone.querySelectorAll('.overlay-draw').forEach(n=>n.remove());
-  // inline styles: ensure segments have fill/stroke attributes so serialization matches visuals
-  const segs = clone.querySelectorAll('.segment');
-  segs.forEach(s=>{
-    const name = s.getAttribute('data-name') || s.getAttribute('id');
-    const isRevealed = Boolean(saved[name]);
-    s.setAttribute('stroke','#000');
-    s.setAttribute('fill', isRevealed ? getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d' : 'transparent');
+
+  // ensure outlines are present and visible
+  clone.querySelectorAll('.outline').forEach(o=>{
+    o.setAttribute('stroke','#000');
+    o.setAttribute('fill','none');
+    o.setAttribute('stroke-width','1.6');
   });
-  // also ensure outline group is present; labels will be kept
+
+  // set segment fills/strokes based on saved, but DO NOT fill 'الفاتحة'
+  clone.querySelectorAll('.segment').forEach(s=>{
+    try{
+      const nm = s.getAttribute('data-name') || s.getAttribute('id') || '';
+      s.setAttribute('stroke','#000');
+      s.setAttribute('stroke-width','1.6');
+      if(nm === 'الفاتحة'){
+        s.setAttribute('fill','transparent');
+      } else {
+        const revealed = Boolean(saved[nm]);
+        s.setAttribute('fill', revealed ? ( getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff4d4d' ) : 'transparent');
+      }
+    }catch(e){}
+  });
+
+  // ensure labels visible and colored appropriately
+  clone.querySelectorAll('text.segment-label').forEach(t=>{
+    try{
+      const txt = (t.textContent||'').trim();
+      const revealed = Boolean(saved[txt]);
+      t.setAttribute('fill', revealed ? '#fff' : '#071133');
+    }catch(e){}
+  });
+
   // serialize
   const svgString = new XMLSerializer().serializeToString(clone);
   const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
   const img = new Image();
   img.src = encoded;
   await new Promise((res, rej)=>{ img.onload = res; img.onerror = rej; });
-  const width = img.width * scale;
-  const height = img.height * scale;
+
+  // draw to canvas with white background (بيضة)
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = Math.round(w*scale);
+  canvas.height = Math.round(h*scale);
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff00'; // transparent background
-  ctx.fillRect(0,0,width,height);
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.fillStyle = '#ffffff'; // **بيضة الخلفية**
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
   return new Promise((resolve)=> canvas.toBlob(resolve, 'image/png'));
 }
 
@@ -577,8 +677,8 @@ async function shareProgressAsImage(){
   try{
     const blob = await svgToPngBlob(svgRoot, 2);
     if(!blob) throw new Error('لم يتم إنشاء الصورة');
-    // try Web Share API with files
     const file = new File([blob], 'quran-progress.png', { type: 'image/png' });
+    // try Web Share API with files
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       try {
         await navigator.share({ files: [file], title: 'تقدّم حفظي في القرآن', text: 'هذا تقدّمي في حفظ سور القرآن — ما شاء الله' });
@@ -586,7 +686,6 @@ async function shareProgressAsImage(){
         shareModal.style.display='none';
         return;
       } catch (err) {
-        // fallthrough to other options
         console.warn('share failed', err);
       }
     }
@@ -599,9 +698,7 @@ async function shareProgressAsImage(){
     }
     // provide download link as fallback
     const url = URL.createObjectURL(blob);
-    // set download by opening new tab or providing link
     shareStatus.innerHTML = `الصورة جاهزة. <a href="${url}" download="quran-progress.png">اضغط هنا لتحميلها</a> — ثم شاركها على فيسبوك/واتساب.`;
-    // open WhatsApp web with a message (user must attach image manually if desktop)
     shareWasap.onclick = ()=> {
       const text = encodeURIComponent('هذا تقدّمي في حفظ سور القرآن — ما شاء الله\n');
       const whatsappUrl = `https://wa.me/?text=${text}`;
@@ -609,10 +706,8 @@ async function shareProgressAsImage(){
     };
     shareFb.onclick = ()=> {
       const text = encodeURIComponent('تقدّمي في حفظ سور القرآن — ما شاء الله');
-      // Facebook share via sharer requires URL — so we open FB share dialog to let user attach image manually
       window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(location.href) + '&quote=' + text, '_blank');
     };
-    // direct save opens the image
     shareDirect.onclick = ()=> { window.open(url, '_blank'); };
   } catch(err){
     console.error(err);
@@ -639,7 +734,13 @@ shareCopy.addEventListener('click', async ()=> {
   }catch(e){ console.error(e); shareStatus.textContent = 'النسخ إلى الحافظة غير متوفر أو فشل.'; }
 });
 
-/* start */
+/* Donate button behavior */
+donateBtn.addEventListener('click', ()=> {
+  if(DONATION_LINK && DONATION_LINK !== '#') window.open(DONATION_LINK, '_blank');
+  else alert('لم يتم ضبط رابط التبرع بعد.');
+});
+
+/* Start */
 loadAndInjectSVG();
 </script>
 </body>

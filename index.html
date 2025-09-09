@@ -24,14 +24,34 @@
   .heart-container{background:linear-gradient(180deg,#fff,#f7fbff);padding:16px;border-radius:12px;border:1px solid #eef6fc;display:flex;align-items:center;justify-content:center;min-height:420px}
   svg{max-width:100%;height:auto;display:block}
 
-  /* segments styling */
-  .segment{fill:transparent;stroke:#000;stroke-width:1.6;cursor:pointer;transition:transform .18s ease, filter .18s ease}
+  /* ---------- التعديل الأساسي: الحدود السوداء دايمًا + التلوين فقط عند revealed ---------- */
+  .segment{
+    fill: transparent !important;      /* مفرغ من البداية */
+    stroke: #000 !important;           /* حدود سوداء ظاهرة من البداية */
+    stroke-width: 1.6 !important;
+    cursor: pointer;
+    transition: transform .18s ease, filter .18s ease, fill .25s ease;
+  }
   .segment:hover{transform:translateY(-4px);filter:drop-shadow(0 10px 20px rgba(3,7,18,0.06))}
-  /* when revealed, keep stroke black but fill red */
-  .segment.revealed{fill:var(--accent); transition:fill .4s ease; stroke:#000; }
+  .segment.revealed{
+    fill: var(--accent) !important;    /* أحمر فقط عند الحفظ */
+    stroke: #000 !important;           /* حدود تظل سوداء */
+  }
 
-  /* animation class for the stroke-draw effect */
-  .segment.anim-stroke{stroke:var(--accent);stroke-width:2.6;fill:transparent}
+  /* animation class kept for compatibility but it no longer toggles stroke color */
+  .segment.anim-stroke{
+    /* kept empty or minor styling; drawing is done via overlay element in JS */
+  }
+
+  /* overlay draw path style (temporary red stroke drawn on top of segment but under outlines) */
+  .overlay-draw{
+    pointer-events:none;
+    fill:none;
+    stroke: #ff4d4d;
+    stroke-width: 2.6;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
 
   /* outlines & labels (injected on top of shapes) */
   .outline{fill:none;stroke:#000;stroke-width:1.8;pointer-events:none}
@@ -181,7 +201,10 @@ function initializeSegments(){
 
   segments.forEach(seg=>{
     const name = seg.getAttribute('data-name') || seg.getAttribute('id') || 'غير معروف';
-    seg.style.stroke = seg.style.stroke || '#000';
+
+    // force stroke & empty fill from the start (we don't change structure)
+    seg.setAttribute('fill', 'transparent');
+    seg.setAttribute('stroke', seg.getAttribute('stroke') || '#000');
     seg.style.cursor = 'pointer';
 
     if(saved[name]){
@@ -266,6 +289,64 @@ function createOutlinesAndLabels(svgRoot){
 }
 /* --- end outlines/labels --- */
 
+function animateDrawThenReveal(seg, name, onDone){
+  // create overlay path clone to draw red stroke, then remove it and reveal original segment
+  const svgRoot = heartWrap.querySelector('svg');
+  if(!svgRoot){
+    // fallback: directly reveal
+    seg.classList.add('revealed');
+    if(typeof onDone === 'function') onDone();
+    return;
+  }
+  try{
+    const overlay = seg.cloneNode(false);
+    overlay.classList.add('overlay-draw');
+    overlay.setAttribute('fill','none');
+    overlay.setAttribute('stroke','#ff4d4d');
+    overlay.setAttribute('stroke-width','2.6');
+    // compute length and set dash
+    let len = 0;
+    try{ len = overlay.getTotalLength(); } catch(e){ len = seg.dataset._len || 0; }
+    overlay.style.strokeDasharray = len;
+    overlay.style.strokeDashoffset = len;
+    overlay.style.transition = 'stroke-dashoffset 0.45s linear';
+    // Insert overlay BEFORE the outlines group so outlines remain visible on top
+    const outlinesG = svgRoot.querySelector('#__outlines_group');
+    if(outlinesG) svgRoot.insertBefore(overlay, outlinesG);
+    else svgRoot.appendChild(overlay);
+    // force reflow
+    void overlay.getBoundingClientRect();
+    // start animation
+    requestAnimationFrame(()=> {
+      overlay.style.strokeDashoffset = '0';
+    });
+    // on finish
+    const handler = function(ev){
+      // some browsers report propertyName 'stroke-dashoffset'
+      if(ev && ev.propertyName && ev.propertyName !== 'stroke-dashoffset' && ev.propertyName !== 'strokeDashoffset') return;
+      overlay.removeEventListener('transitionend', handler);
+      // remove overlay
+      overlay.remove();
+      // reveal the original segment (fill only)
+      seg.classList.add('revealed');
+      if(typeof onDone === 'function') onDone();
+    };
+    overlay.addEventListener('transitionend', handler);
+    // safety fallback: if no transitionend fires, ensure reveal after 600ms
+    setTimeout(()=> {
+      if(svgRoot.contains(overlay)) {
+        try{ overlay.remove(); }catch(e){}
+        seg.classList.add('revealed');
+        if(typeof onDone === 'function') onDone();
+      }
+    }, 900);
+  } catch(e){
+    // fallback
+    seg.classList.add('revealed');
+    if(typeof onDone === 'function') onDone();
+  }
+}
+
 // modal handlers
 modalCancel.addEventListener('click', ()=>{ modalEl.style.display='none'; modalEl.dataset.target=''; });
 
@@ -275,25 +356,26 @@ modalConfirm.addEventListener('click', ()=>{
   const seg = segments.find(s => (s.getAttribute('data-name') || s.getAttribute('id')) === name);
   if(!seg){ modalEl.style.display='none'; return; }
 
+  // Special-case: الفاتحة — تسجل محفوظة بدون تلوين (تجنُب لأن الفاتحة قد تمثل مساراً يغطي القلب كله)
+  if(name === 'الفاتحة'){
+    saved[name] = true;
+    saved._last = name;
+    localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
+    updateUI();
+    encourage.textContent = `سورة الفاتحة تم تسجيلها (غير ملونة لتجنب تغطية القلب).`;
+    modalEl.style.display = 'none';
+    return;
+  }
+
   try{
-    const len = Number(seg.dataset._len) || seg.getTotalLength();
-    seg.classList.add('anim-stroke');
-    void seg.getBoundingClientRect();
-    seg.style.transition = 'stroke-dashoffset 0.45s linear';
-    seg.style.strokeDashoffset = '0';
-    const onEnd = (ev) => {
-      if(ev.propertyName !== 'stroke-dashoffset') return;
-      seg.removeEventListener('transitionend', onEnd);
-      seg.classList.remove('anim-stroke');
-      seg.classList.add('revealed');
-      seg.style.strokeDashoffset = len;
-      seg.style.transition = 'fill 0.3s ease';
-      // save
+    // animate overlay draw then reveal
+    animateDrawThenReveal(seg, name, () => {
+      // after animation, save progress
       saved[name] = true;
       saved._last = name;
       localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
       updateUI();
-      // also update corresponding label color
+      // update corresponding label color
       const svgRoot = heartWrap.querySelector('svg');
       if(svgRoot){
         const labelsG = svgRoot.querySelector('#__labels_group');
@@ -306,26 +388,15 @@ modalConfirm.addEventListener('click', ()=>{
       }
       encourage.textContent = `ما شاء الله! تم حفظ "${name}". استمر 🌟`;
       modalEl.style.display = 'none';
-    };
-    seg.addEventListener('transitionend', onEnd);
+    });
   } catch(e){
+    // fallback if anything fails
     seg.classList.add('revealed');
     saved[name] = true;
     saved._last = name;
     localStorage.setItem('quran_heart_progress', JSON.stringify(saved));
     updateUI();
     encourage.textContent = `ما شاء الله! تم حفظ "${name}". استمر 🌟`;
-    // update label color
-    const svgRoot = heartWrap.querySelector('svg');
-    if(svgRoot){
-      const labelsG = svgRoot.querySelector('#__labels_group');
-      if(labelsG){
-        for(let i=0;i<labelsG.children.length;i++){
-          const lab = labelsG.children[i];
-          if(lab && (lab.textContent || '').trim() === name) lab.classList.add('revealed');
-        }
-      }
-    }
     modalEl.style.display = 'none';
   }
 });

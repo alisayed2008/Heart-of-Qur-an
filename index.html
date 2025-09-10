@@ -16,16 +16,16 @@
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:'El Messiri',sans-serif;background:var(--bg);color:#071133; -webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}
-  /* page layout */
+  
   .site{min-height:100vh;display:flex;flex-direction:column;gap:28px;padding:22px}
   header.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;border-radius:16px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 10px 30px rgba(2,6,23,0.06);background:linear-gradient(180deg,#fff,#fcfcfc);position:relative;z-index:80}
   .menu-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .menu-icon svg {
   width:22px;
   height:22px;
-  stroke:#000;      /* اللون أسود */
-  stroke-width:2;   /* سمك الخط */
-  fill:#000;        /* نخليها شفافة من الداخل */
+  stroke:#000;     
+  stroke-width:2;  
+  fill:#000;        
 }
 
   .nav-center{display:flex;gap:22px;align-items:center;justify-content:center;flex:1}
@@ -33,25 +33,25 @@
   .icons-right{display:flex;gap:10px;align-items:center}
   .small-square{width:18px;height:18px;background:#000;border-radius:2px;cursor:pointer}
 
-  /* main panel */
+  
   .panel{display:flex;gap:26px;align-items:flex-start}
   .card{flex:1;background:var(--card-bg);border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,0.07);position:relative;overflow:visible}
-  /* big curved container with red glow */
+  
   .curvy{border-radius:28px;padding:34px;background:linear-gradient(180deg,#fff,#fff); box-shadow:0 12px 40px rgba(255,77,77,0.08); border:1px solid rgba(255,77,77,0.08); }
   .curvy.red-glow{box-shadow:0 18px 60px rgba(255,77,77,0.14);}
 
-  /* left & right cards on homepage */
+  
   .home-row{display:flex;gap:28px;align-items:stretch}
   .home-card{flex:1;border-radius:24px;padding:18px;background:#fff;box-shadow:0 28px 80px rgba(255,77,77,0.06);border:1px solid rgba(255,77,77,0.06);min-height:260px;position:relative;overflow:visible}
   .home-card h3{color:var(--accent);margin:6px 0 14px;font-size:20px}
   .home-card .enter{position:absolute;left:20px;bottom:18px;color:var(--accent);font-weight:700;cursor:pointer}
-  /* heart image overlapping */
+ 
   .heart-wrap{position:relative;width:320px;height:340px;margin:-40px auto 0;display:flex;align-items:center;justify-content:center;pointer-events:none}
   #heart-img{width:320px;height:auto;transform:rotate(-6deg);filter:drop-shadow(0 12px 36px rgba(255,77,77,0.12));transition:transform .35s ease;pointer-events:auto}
-  /* right card content */
+  
   .soon{color:var(--muted);margin-top:20px}
 
-  /* donate section */
+  
   .donate-list{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
   .donate-buttons{display:flex;flex-direction:column;gap:14px;width:280px}
   .donate-btn{display:flex;align-items:center;gap:12px;padding:6px;border-radius:14px;background:#fff;border:1px solid rgba(0,0,0,0.06);cursor:pointer;font-weight:700}
@@ -65,21 +65,21 @@
   }
   .donate-desc{flex:1;padding-left:18px;color:var(--muted);font-size:16px}
 
-  /* about section */
+
   .about-row{display:flex;gap:22px;align-items:center}
   .logo-box{width:180px;height:140px;border-radius:18px;background:#fff;box-shadow:0 18px 40px rgba(255,77,77,0.06);display:flex;align-items:center;justify-content:center;overflow:visible}
   .about-text{flex:1;color:var(--muted);line-height:1.9;font-size:16px}
 
-  /* contact */
+  
   .contact-box{display:flex;align-items:center;justify-content:space-between;gap:20px}
   .contact-box a{color:var(--accent);font-weight:700}
 
-  /* floating social icons (top-right) for replaceable svgs */
+ 
   .social-svgs{display:flex;gap:8px}
   .social-svgs .social{width:38px;height:38px;border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden}
   .social-svgs .social img{width:22px;height:22px;object-fit:contain;display:block}
 
-  /* small responsive rules */
+  
   @media (max-width:980px){
     .panel{flex-direction:column;padding:14px}
     .home-row{flex-direction:column}
@@ -89,18 +89,18 @@
     .donate-buttons{width:100%}
     .donate-btn{width:100%}
     .logo-box{width:120px;height:120px}
-    .nav-center{display:none} /* hide nav by default on mobile */
+    .nav-center{display:none} 
     .nav-center.open{display:flex;position:absolute;left:12px;right:12px;top:64px;background:#fff;border-radius:10px;padding:12px;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
     header.topbar{padding:10px}
     .menu-icon{display:flex}
   }
 
-  /* desktop: ensure menu icon isn't too prominent */
+ 
   @media (min-width:981px){
     .menu-icon{display:flex}
   }
 
-  /* subtle interactions */
+  
   .home-card:hover{transform:translateY(-6px);transition:transform .35s;box-shadow:0 30px 80px rgba(255,77,77,0.09)}
   .donate-btn:active,.card:active{transform:translateY(1px)}
   .nav-center a.active{background:transparent;color:var(--accent-strong)}
@@ -110,10 +110,10 @@
 <body>
   <div class="site">
 
-    <!-- header -->
+    
     <header class="topbar" role="banner">
       <div class="menu-icon" id="menuToggle" title="قائمة" aria-expanded="false" aria-controls="mainNav">
-        <!-- menu icon -->
+       
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="#000" fill="currentColor"/></svg>
       </div>
 
@@ -125,41 +125,41 @@
       </nav>
 
       <div class="icons-right">
-        <!-- top-right placeholders for the two SVGs you will replace -->
+        
         <div class="social-svgs" aria-hidden="false">
-          <!-- ضع ملفات svg/png داخل img هنا بنفس الأسماء أدناه -->
-          <div id="svg-top-1" class="social" title="فيسبوك" data-link="https://facebook.com/yourpage" role="link" tabindex="0">
+          
+          <div id="svg-top-1" class="social" title="فيسبوك" data-link="https://www.facebook.com/alisayedshaheen" role="link" tabindex="0">
             <img src="svg-top-1.svg" alt="فيسبوك">
           </div>
-          <div id="svg-top-2" class="social" title="انستجرام" data-link="https://instagram.com/yourprofile" role="link" tabindex="0">
+          <div id="svg-top-2" class="social" title="انستجرام" data-link="https://www.instagram.com/ali_sayedfathy/" role="link" tabindex="0">
             <img src="svg-top-2.svg" alt="انستاجرام">
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main content area: sections stacked vertically (same page) -->
+    
     <main id="main">
 
-      <!-- HOME section -->
+      
       <section id="home" class="panel">
         <div class="card curvy red-glow" style="flex:1;">
           <div class="home-row">
-            <!-- left box -->
+            
             <div class="home-card" id="left-card">
               <h3>خريطة القلب<br><small style="font-weight:600;color:#c33">حفظ القرآن الكريم</small></h3>
               <div style="height:10px"></div>
               <div style="color:var(--muted);font-size:15px">تتبع أجزاء الحفظ وتظللها عند الإتمام</div>
               <div class="enter" id="enter-link" tabindex="0" role="button" aria-pressed="false">دخول &gt;</div>
 
-              <!-- partially overlapping heart image (will animate slightly with mouse) -->
+              
               <div class="heart-wrap heart-interactive" style="left:-40px;top:-30px">
-                <!-- استخدم SVG المتجه أو PNG؛ ضع الملف بنفس الاسم أدناه -->
+               
                 <img id="heart-img" src="heart.png" alt="قلب الحفظ">
               </div>
             </div>
 
-            <!-- right box -->
+            
             <div class="home-card">
               <h3>خطة الالتزام<br><small style="font-weight:600;color:#c33">بالصلاة</small></h3>
               <div class="soon">قريبًا ...</div>
@@ -168,13 +168,13 @@
         </div>
       </section>
 
-      <!-- DONATE section -->
+      
       <section id="donate" class="card curvy" style="padding:26px;">
         <h2 style="color:var(--accent);margin-top:0">تبرع</h2>
         <div class="donate-list">
-          <!-- donate-buttons: صور جاهزة مكان الأزرار النصية -->
+          
           <div class="donate-buttons">
-            <!-- ضع ملفات الصور بالأسماء التالية في نفس مجلد الصفحة -->
+            
             <button class="donate-btn buyme" id="donate-buyme" data-link="https://buymeacoffee.com/heartquran" aria-label="تبرع عبر حساب بنكي">
               <img src="buymeacoffee.png" alt="الحساب البنكي">
             </button>
@@ -200,11 +200,11 @@
         </div>
       </section>
 
-      <!-- ABOUT section -->
+      
       <section id="about" class="card curvy red-glow" style="padding:26px;">
         <div class="about-row">
           <div class="logo-box">
-            <!-- استبدل الصورة بالشعار الفعلي -->
+           
             <img src="shahin-logo.png" alt="logo" style="max-width:92%;max-height:92%;transform:translateX(6px) rotate(-6deg)">
           </div>
           <div class="about-text">
@@ -214,7 +214,7 @@
         </div>
       </section>
 
-      <!-- CONTACT section -->
+      
       <section id="contact" class="card curvy" style="padding:26px;">
         <div class="contact-box">
           <div>
@@ -237,9 +237,9 @@
   </div>
 
 <script>
-/* ========== سلوك الواجهة ========== */
 
-/* smooth scrolling للنقر على الروابط في الهيدر */
+
+
 document.querySelectorAll('.nav-link').forEach(a=>{
   a.addEventListener('click', e=>{
     e.preventDefault();
@@ -255,7 +255,7 @@ document.querySelectorAll('.nav-link').forEach(a=>{
   });
 });
 
-/* menu toggle للموبايل: يعطي/يُزيل الكلاس open */
+
 const menuToggle = document.getElementById('menuToggle');
 menuToggle.addEventListener('click', ()=> {
   const nav = document.getElementById('mainNav');
@@ -263,7 +263,7 @@ menuToggle.addEventListener('click', ()=> {
   menuToggle.setAttribute('aria-expanded', opened ? 'true' : 'false');
 });
 
-/* Hover / parallax effect على صورة القلب داخل left-card */
+
 const leftCard = document.getElementById('left-card');
 const heartImg = document.getElementById('heart-img');
 if(leftCard && heartImg){
@@ -280,13 +280,12 @@ if(leftCard && heartImg){
   });
 }
 
-/* دخول: ضع الرابط الذي تريد الانتقال إليه */
 document.getElementById('enter-link').addEventListener('click', ()=> {
   const TARGET_URL = 'https://quran-heart.netlify.app/hart';
   window.open(TARGET_URL, '_self');
 });
 
-/* أزرار التبرع: افتح الرابط الموجود في data-link عند النقر */
+
 document.querySelectorAll('.donate-btn').forEach(btn=>{
   btn.addEventListener('click', (e)=>{
     const url = btn.dataset.link;
@@ -296,7 +295,7 @@ document.querySelectorAll('.donate-btn').forEach(btn=>{
   });
 });
 
-/* لوحة الأيقونات العلوية: افتح الرابط الموجود في data-link */
+
 document.querySelectorAll('.social-svgs .social').forEach(el=>{
   el.addEventListener('click', ()=> {
     const url = el.dataset.link || el.querySelector('img')?.getAttribute('data-link') || null;
@@ -308,7 +307,7 @@ document.querySelectorAll('.social-svgs .social').forEach(el=>{
   el.addEventListener('keypress', (e)=> { if(e.key === 'Enter') el.click(); });
 });
 
-/* small squares in contact section (placeholders) */
+
 document.getElementById('social-fb').addEventListener('click', ()=> {
   window.open(document.getElementById('social-fb').dataset.link || 'https://facebook.com/yourpage', '_blank');
 });
@@ -316,7 +315,7 @@ document.getElementById('social-ig').addEventListener('click', ()=> {
   window.open(document.getElementById('social-ig').dataset.link || 'https://instagram.com/yourprofile', '_blank');
 });
 
-/* responsive initial state for nav */
+
 function applyResponsiveNav(){
   const nav = document.getElementById('mainNav');
   if(window.innerWidth <= 980){
@@ -329,5 +328,6 @@ applyResponsiveNav();
 </script>
 </body>
 </html>
+
 
 
